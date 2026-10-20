@@ -2,6 +2,7 @@ import { useEffect, useMemo, type ReactNode } from 'react'
 import { progressOf } from '../domain/booking'
 import { formatRate } from '../domain/money'
 import { useApp, useAppStore } from './AppContext'
+import { SortableTabs } from './components/SortableTabs'
 import { ThemeControls } from './components/ThemeControls'
 import { AgendaView } from './features/agenda/AgendaView'
 import { BudgetView } from './features/budget/BudgetView'
@@ -31,12 +32,22 @@ function Header() {
   const { trip } = useApp()
   const tab = useAppStore((s) => s.tab)
   const setTab = useAppStore((s) => s.setTab)
+  const tabOrder = useAppStore((s) => s.tabOrder)
+  const moveTab = useAppStore((s) => s.moveTab)
+  const shiftTab = useAppStore((s) => s.shiftTab)
   const booking = useAppStore((s) => s.booking)
   const keys = useMemo(
     () => [...trip.stays, ...trip.transfers, ...trip.tickets].map((x) => x.id),
     [trip],
   )
   const { done, total } = progressOf(booking, keys)
+  const ordered = useMemo(
+    () =>
+      tabOrder.flatMap((id) =>
+        TABS.filter((t) => t.id === id).map(({ id, label }) => ({ id, label })),
+      ),
+    [tabOrder],
+  )
 
   return (
     <header className="sticky top-[env(safe-area-inset-top,0px)] z-[5] -mx-4 border-b border-line bg-bg px-4 pt-3">
@@ -68,26 +79,13 @@ function Header() {
           </div>
         </div>
       </div>
-      <nav
-        className="scrollbar-none mt-2.5 flex gap-0.5 overflow-x-auto"
-        role="tablist"
-        aria-label="Secciones"
-      >
-        {TABS.map((t) => (
-          <button
-            key={t.id}
-            type="button"
-            role="tab"
-            id={`tab-${t.id}`}
-            aria-selected={t.id === tab}
-            aria-controls={`p-${t.id}`}
-            className="cursor-pointer border-0 border-b-[3px] border-transparent bg-transparent px-3 py-2.5 text-[.9rem] font-semibold whitespace-nowrap text-muted aria-selected:border-accent aria-selected:text-ink"
-            onClick={() => setTab(t.id)}
-          >
-            {t.label}
-          </button>
-        ))}
-      </nav>
+      <SortableTabs
+        tabs={ordered}
+        selected={tab}
+        onSelect={setTab}
+        onMove={moveTab}
+        onShift={shiftTab}
+      />
     </header>
   )
 }
@@ -109,7 +107,10 @@ export function App() {
     }
   }, [tab])
   useEffect(() => {
-    const onHash = () => setTab(tabFromHash(window.location.hash))
+    const onHash = () => {
+      const requested = tabFromHash(window.location.hash)
+      if (requested) setTab(requested)
+    }
     window.addEventListener('hashchange', onHash)
     return () => window.removeEventListener('hashchange', onHash)
   }, [setTab])

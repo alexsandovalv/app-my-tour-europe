@@ -1,12 +1,9 @@
-export const TAB_IDS = ['map', 'cal', 'age', 'mad', 'hos', 'tra', 'ent', 'bud'] as const
-export type TabId = (typeof TAB_IDS)[number]
+import { isTabId, type TabId } from '../../domain/tabs'
 
-export function isTabId(value: string): value is TabId {
-  return (TAB_IDS as readonly string[]).includes(value)
-}
+export { TAB_IDS, isTabId, type TabId } from '../../domain/tabs'
 
-/** Pestaña inicial según el hash de la URL (#age), o el mapa. */
-export function tabFromHash(hash: string): TabId {
+/** Pestaña pedida por el hash de la URL (#age), o `null` si no hay una válida. */
+export function tabFromHash(hash: string): TabId | null {
   const id = hash.replace('#', '')
-  return isTabId(id) ? id : 'map'
+  return isTabId(id) ? id : null
 }

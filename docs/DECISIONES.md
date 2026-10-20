@@ -85,3 +85,19 @@ sobre los eventos que realmente se muestran ese día.
 `npm run build:single` compila Tailwind con su API y empaqueta todo en un solo HTML con esbuild. Sirve para abrir la app sin servidor y para
 publicarla como artefacto de Claude, donde los datos compartidos usan su capacidad `db`
 (`infrastructure/storage/claudeDb.ts`), que queda inactiva fuera de ese entorno.
+
+## ADR-11: Reordenar pestañas con código propio
+
+El orden es una lista de ids (`domain/tabs.ts`: `moveTab`, `shiftTab`, `sanitizeTabOrder`), guardada aparte del
+estado de reservas porque es una preferencia de este dispositivo (`TabOrderStore`, clave
+`viaje-europa-pestanas-v1`). Un valor guardado se sanea al leerlo: ids desconocidos o repetidos se descartan y
+los que faltan se añaden, de modo que añadir una pestaña en el futuro no rompe órdenes ya guardados.
+
+El arrastre vive en un solo componente (`presentation/components/SortableTabs.tsx`) con eventos de puntero, sin
+librería: el ratón arrastra tras unos pocos píxeles; el dedo necesita una pulsación larga para no estorbar al
+desplazamiento horizontal de la barra; con teclado se usa Alt + flecha y se anuncia la posición con una región
+`role="status"`. La posición de destino se decide con el borde delantero de la pestaña arrastrada frente al
+centro de las vecinas (con el centro, una pestaña ancha no alcanzaba el primer lugar).
+
+Como el componente solo recibe `tabs`, `onMove` y `onShift`, sustituirlo por dnd-kit u otra librería no toca el
+dominio, el store ni la persistencia.

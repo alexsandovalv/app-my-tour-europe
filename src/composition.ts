@@ -7,6 +7,7 @@ import { staticTripSource } from './infrastructure/data/tripData'
 import { staticRateProvider } from './infrastructure/fx/ecbRate'
 import { ClaudeDbSync } from './infrastructure/storage/claudeDb'
 import { LocalBookingCache, browserStorage } from './infrastructure/storage/localStorageStore'
+import { LocalTabOrderStore } from './infrastructure/storage/localTabOrderStore'
 import { LocalPreferencesStore } from './infrastructure/storage/localPreferencesStore'
 import { SyncedBookingStore } from './infrastructure/storage/syncedBookingStore'
 import { connectBookingSync, createAppStore } from './presentation/state/appStore'
@@ -27,8 +28,9 @@ export function createApp() {
   const store = createAppStore({
     bookings,
     preferences: new LocalPreferencesStore(browserStorage()),
+    tabOrderStore: new LocalTabOrderStore(browserStorage()),
     firstDay: trip.firstDay,
-    initialTab: tabFromHash(typeof window === 'undefined' ? '' : window.location.hash),
+    initialTab: tabFromHash(typeof window === 'undefined' ? '' : window.location.hash) ?? undefined,
     initialAgendaView: isNarrowScreen() ? 'lista' : 'mes',
     systemPrefersDark,
   })

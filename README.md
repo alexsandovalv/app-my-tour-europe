@@ -18,6 +18,10 @@ plan de Madrid (21 a 26), hospedaje, trenes y vuelos, entradas, y seguimiento de
 - **Presupuesto**: cifras (total, gastado, por pagar, lo que te queda, promedio diario), tabla por
   categoría con presupuestado, real, por pagar y diferencia, dos gráficos (por categoría y gasto diario
   contra el tope) y un registro de gastos del día a día con alerta al pasar el tope diario.
+- **Pestañas reordenables**: las ocho se arrastran con el ratón; en el celular se mantiene pulsada una
+  pestaña y se arrastra (deslizar sin esperar sigue desplazando la barra); con teclado, Alt + ← →. El orden se
+  guarda y la página abre en la primera pestaña (salvo que la URL pida otra). «Restablecer orden» está en el
+  menú de tema.
 - **Modo día / noche** con un botón en la cabecera (sigue al sistema hasta que lo cambias) y un menú de tema
   con cuatro acentos de color.
 
@@ -109,9 +113,9 @@ reservas (`BookingState`), por lo que se guardan en `localStorage` y se sincroni
 ### Estado con Zustand
 
 `presentation/state/appStore.ts` crea un store _vanilla_ de Zustand en tres porciones: **navegación**
-(pestaña, ciudad abierta, vista de agenda), **tema** y **reservas** (estado, enlaces y medio de transporte).
+(pestaña, orden de pestañas, ciudad abierta, vista de agenda), **tema** y **reservas** (estado, enlaces y medio de transporte).
 Las reglas son funciones puras del dominio; el store solo las orquesta y guarda a través de los puertos
-`BookingStore` y `PreferencesStore`. La raíz de composición lo crea y lo entrega a React por contexto, de modo
+`BookingStore`, `PreferencesStore` y `TabOrderStore`. La raíz de composición lo crea y lo entrega a React por contexto, de modo
 que los tests lo ejercitan sin navegador (`tests/store.test.ts`).
 
 ### Tema con Tailwind

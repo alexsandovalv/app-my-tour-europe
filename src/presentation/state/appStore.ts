@@ -1,5 +1,5 @@
 import { createStore, type StoreApi } from 'zustand/vanilla'
-import type { BookingStore, PreferencesStore } from '../../application/ports'
+import type { BookingStore, PreferencesStore, TabOrderStore } from '../../application/ports'
 import {
   addExpense as addExpenseTo,
   cycleStatus,
@@ -24,12 +24,23 @@ import {
   type ThemePrefs,
 } from '../../domain/preferences'
 import type { CityId, TransportMode } from '../../domain/trip'
-import type { TabId } from './tabs'
+import {
+  DEFAULT_TAB_ORDER,
+  isDefaultTabOrder,
+  moveTab,
+  shiftTab,
+  type TabId,
+} from '../../domain/tabs'
 
 export type AgendaView = 'mes' | 'lista'
 
 interface NavigationSlice {
   tab: TabId
+  /** Orden en que se muestran las pestañas (lo elige el usuario arrastrando). */
+  tabOrder: readonly TabId[]
+  moveTab(id: TabId, toIndex: number): void
+  shiftTab(id: TabId, delta: number): void
+  resetTabOrder(): void
   openCityId: CityId | null
   agendaView: AgendaView
   selectedDay: number
@@ -79,6 +90,8 @@ export type AppStore = StoreApi<AppState>
 export interface AppStoreDeps {
   bookings: BookingStore
   preferences: PreferencesStore
+  tabOrderStore?: TabOrderStore
+  /** Pestaña pedida por la URL; si no hay, se abre la primera del orden elegido. */
   initialTab?: TabId
   initialAgendaView?: AgendaView
   firstDay: number
@@ -94,14 +107,27 @@ export function createAppStore(deps: AppStoreDeps): AppStore {
   const clock = deps.clock ?? Date.now
   const systemDark = deps.systemPrefersDark ?? (() => false)
 
+  const loadedOrder = deps.tabOrderStore?.load() ?? DEFAULT_TAB_ORDER
+
   return createStore<AppState>()((set, get) => {
+    const commitOrder = (next: readonly TabId[]) => {
+      if (next === get().tabOrder) return
+      set({ tabOrder: next })
+      deps.tabOrderStore?.save(next)
+    }
     const commitBooking = (next: BookingState) => {
       set({ booking: next })
       deps.bookings.save(next)
     }
     return {
       // — navegación
-      tab: deps.initialTab ?? 'map',
+      tab: deps.initialTab ?? loadedOrder[0] ?? 'map',
+      tabOrder: loadedOrder,
+      moveTab: (id, toIndex) => commitOrder(moveTab(get().tabOrder, id, toIndex)),
+      shiftTab: (id, delta) => commitOrder(shiftTab(get().tabOrder, id, delta)),
+      resetTabOrder: () => {
+        if (!isDefaultTabOrder(get().tabOrder)) commitOrder(DEFAULT_TAB_ORDER)
+      },
       openCityId: null,
       agendaView: deps.initialAgendaView ?? 'mes',
       selectedDay: deps.firstDay,

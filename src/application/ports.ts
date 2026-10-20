@@ -1,6 +1,7 @@
 import type { ExchangeRate } from '../domain/money'
 import type { BookingState } from '../domain/booking'
 import type { ThemePrefs } from '../domain/preferences'
+import type { TabId } from '../domain/tabs'
 import type { Trip } from '../domain/trip'
 
 /** Fuente de los datos del viaje. Los importes llegan en euros, como los publica cada proveedor. */
@@ -28,4 +29,10 @@ export interface BookingStore {
 export interface PreferencesStore {
   load(): ThemePrefs | null
   save(prefs: ThemePrefs): void
+}
+
+/** Persistencia del orden de las pestañas que eligió el usuario. */
+export interface TabOrderStore {
+  load(): readonly TabId[] | null
+  save(order: readonly TabId[]): void
 }

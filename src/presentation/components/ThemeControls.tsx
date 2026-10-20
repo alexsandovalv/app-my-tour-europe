@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { isDefaultTabOrder } from '../../domain/tabs'
 import { ACCENTS, THEME_MODES, type AccentId, type ThemeMode } from '../../domain/preferences'
 import { useAppStore } from '../AppContext'
 import { useIsDark } from '../hooks'
@@ -32,6 +33,8 @@ export function ThemeControls() {
   const toggleDark = useAppStore((s) => s.toggleDark)
   const setThemeMode = useAppStore((s) => s.setThemeMode)
   const setAccent = useAppStore((s) => s.setAccent)
+  const tabsAreDefault = useAppStore((s) => isDefaultTabOrder(s.tabOrder))
+  const resetTabOrder = useAppStore((s) => s.resetTabOrder)
   const [open, setOpen] = useState(false)
   const box = useRef<HTMLDivElement>(null)
 
@@ -106,6 +109,22 @@ export function ThemeControls() {
                 </button>
               ))}
             </div>
+          </div>
+          <div>
+            <div className="mb-1.5 font-mono text-[.72rem] text-muted">Orden de las pestañas</div>
+            <p className="m-0 mb-2 text-[.78rem] text-muted">
+              Arrastra una pestaña para moverla; en el celular, mantenla pulsada. Con teclado: Alt +
+              ← →.
+            </p>
+            <button
+              type="button"
+              id="tabsReset"
+              disabled={tabsAreDefault}
+              className="cursor-pointer rounded-md border border-line bg-surface px-3 py-1.5 text-[.82rem] font-semibold text-ink hover:border-accent disabled:cursor-default disabled:opacity-50 disabled:hover:border-line"
+              onClick={resetTabOrder}
+            >
+              Restablecer orden
+            </button>
           </div>
           <div>
             <div className="mb-1.5 font-mono text-[.72rem] text-muted">Color de acento</div>
