@@ -58,10 +58,47 @@ export function scaleRange(range: PriceRange, factor: number): PriceRange {
   return { ...range, low: range.low * factor, high: range.high * factor }
 }
 
+/** Importe tal como lo escribió el usuario, en la moneda en que lo pagó. */
+export interface Money {
+  readonly amount: number
+  readonly currency: Currency
+}
+
+export const roundCents = (n: number): number => Math.round(n * 100) / 100
+
+/** Valor en dólares de un importe propio; los euros se convierten con el cambio de referencia. */
+export function usdOf(money: Money, fx: ExchangeRate): number {
+  return roundCents(money.currency === 'USD' ? money.amount : money.amount * fx.rate)
+}
+
+export function isMoney(value: unknown): value is Money {
+  if (typeof value !== 'object' || value === null) return false
+  const m = value as Record<string, unknown>
+  return (
+    typeof m.amount === 'number' &&
+    Number.isFinite(m.amount) &&
+    m.amount > 0 &&
+    m.amount <= MAX_AMOUNT &&
+    (m.currency === 'USD' || m.currency === 'EUR')
+  )
+}
+
+/** Tope razonable para un importe de viaje: evita valores absurdos por un error de tecleo. */
+export const MAX_AMOUNT = 1_000_000
+
 const SYMBOL: Record<Currency, string> = { EUR: '€', USD: 'US$' }
 
 export function formatAmount(amount: number, currency: Currency = 'USD'): string {
   return `${SYMBOL[currency]}${amount.toLocaleString('en-US')}`
+}
+
+/** "US$1,234" para importes enteros y "US$12.50" cuando hay centavos. */
+export function formatUsd(amount: number): string {
+  const whole = Math.abs(amount - Math.round(amount)) < 0.005
+  const text = whole
+    ? Math.round(amount).toLocaleString('en-US')
+    : amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+  return `${SYMBOL.USD}${text}`
 }
 
 export function formatRange(range: PriceRange): string {

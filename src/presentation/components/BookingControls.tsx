@@ -1,6 +1,8 @@
 import { useState } from 'react'
 import { statusOf, type BookingStatus } from '../../domain/booking'
-import { useAppStore } from '../AppContext'
+import { isoOfDay } from '../../domain/expenses'
+import { formatUsd, usdOf, type Currency } from '../../domain/money'
+import { useApp, useAppStore } from '../AppContext'
 
 const STATUS_STYLE: Record<BookingStatus, string> = {
   'Por reservar': 'bg-todo-bg text-todo',
@@ -95,6 +97,102 @@ export function PasteBox({ itemKey }: { itemKey: string }) {
         <span className="basis-full text-[.78rem] text-todo">
           Pega un link completo, que empiece con https://
         </span>
+      )}
+    </div>
+  )
+}
+
+const FIELD =
+  'rounded-md border border-line bg-bg px-2 py-[6px] text-[.85rem] text-ink placeholder:text-muted'
+const FIELD_LABEL = 'font-mono text-[.72rem] text-muted'
+
+/** Importe realmente pagado y fecha real de una reserva: alimentan el presupuesto, la agenda y el calendario. */
+export function RealFields({ itemKey }: { itemKey: string }) {
+  const { rate } = useApp()
+  const paid = useAppStore((s) => s.booking.paid[itemKey])
+  const date = useAppStore((s) => s.booking.dates[itemKey] ?? '')
+  const setPaid = useAppStore((s) => s.setPaid)
+  const setRealDate = useAppStore((s) => s.setRealDate)
+  const [draft, setDraft] = useState<string | null>(null)
+  const [pickedCurrency, setPickedCurrency] = useState<Currency>('USD')
+  const [invalid, setInvalid] = useState(false)
+  const currency = paid?.currency ?? pickedCurrency
+
+  const commit = (raw: string) => {
+    const text = raw.trim()
+    if (text === '') {
+      setPaid(itemKey, null)
+      setDraft(null)
+      setInvalid(false)
+      return
+    }
+    const amount = Number(text.replace(',', '.'))
+    if (Number.isFinite(amount) && setPaid(itemKey, { amount, currency })) {
+      setDraft(null)
+      setInvalid(false)
+    } else {
+      setInvalid(true)
+    }
+  }
+
+  return (
+    <div className="mt-2.5 flex flex-wrap items-end gap-x-4 gap-y-2" data-testid="real-fields">
+      <label className="flex flex-col gap-1">
+        <span className={FIELD_LABEL}>Pagué</span>
+        <span className="flex gap-1.5">
+          <input
+            type="text"
+            id={`paid-${itemKey}`}
+            inputMode="decimal"
+            autoComplete="off"
+            placeholder="0.00"
+            aria-label="Importe que pagaste"
+            className={`${FIELD} w-24`}
+            value={draft ?? (paid ? String(paid.amount) : '')}
+            onChange={(e) => setDraft(e.target.value)}
+            onBlur={(e) => {
+              if (draft !== null) commit(e.currentTarget.value)
+            }}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') commit(e.currentTarget.value)
+            }}
+          />
+          <select
+            id={`cur-${itemKey}`}
+            aria-label="Moneda en que pagaste"
+            className={FIELD}
+            value={currency}
+            onChange={(e) => {
+              const next = e.target.value === 'EUR' ? 'EUR' : 'USD'
+              setPickedCurrency(next)
+              if (paid) setPaid(itemKey, { amount: paid.amount, currency: next })
+            }}
+          >
+            <option value="USD">US$</option>
+            <option value="EUR">EUR</option>
+          </select>
+        </span>
+      </label>
+      <label className="flex flex-col gap-1">
+        <span className={FIELD_LABEL}>Fecha real</span>
+        <input
+          type="date"
+          id={`date-${itemKey}`}
+          min={isoOfDay(1)}
+          max={isoOfDay(30)}
+          aria-label="Fecha real de la reserva"
+          className={FIELD}
+          value={date}
+          onChange={(e) => setRealDate(itemKey, e.target.value === '' ? null : e.target.value)}
+        />
+      </label>
+      {paid?.currency === 'EUR' && (
+        <span className="pb-1.5 text-[.82rem] text-muted" data-testid="paid-usd">
+          = {formatUsd(usdOf(paid, rate))}
+        </span>
+      )}
+      {invalid && (
+        <span className="basis-full text-[.78rem] text-todo">Escribe un importe mayor que 0</span>
       )}
     </div>
   )

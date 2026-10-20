@@ -49,6 +49,7 @@ describe('reglas de reservas', () => {
       t: 'z',
     })
     assert.deepEqual(s, {
+      ...EMPTY_BOOKING_STATE,
       estado: { a: 'Pagado' },
       links: { b: 'https://x.io' },
       modes: { 't-1': 'air' },
@@ -57,7 +58,8 @@ describe('reglas de reservas', () => {
     assert.deepEqual(sanitizeBookingState(null), EMPTY_BOOKING_STATE)
     // datos guardados antes de existir `modes` siguen siendo válidos
     assert.deepEqual(
-      sanitizeBookingState({ estado: { a: 'Reservado' }, links: {}, t: 3 }).modes,
+      sanitizeBookingState({ ...EMPTY_BOOKING_STATE, estado: { a: 'Reservado' }, links: {}, t: 3 })
+        .modes,
       {},
     )
   })
@@ -69,7 +71,7 @@ describe('reglas de reservas', () => {
   })
 
   it('gana la versión más reciente', () => {
-    const a: BookingState = { estado: {}, links: {}, modes: {}, t: 10 }
+    const a: BookingState = { ...EMPTY_BOOKING_STATE, estado: {}, links: {}, modes: {}, t: 10 }
     assert.equal(decideSync(a, { ...a, t: 20 }), 'adopt-remote')
     assert.equal(decideSync(a, { ...a, t: 5 }), 'push-local')
     assert.equal(decideSync(a, { ...a }), 'none')
@@ -79,6 +81,7 @@ describe('reglas de reservas', () => {
 
   it('cuenta el progreso solo sobre las claves vigentes', () => {
     const s: BookingState = {
+      ...EMPTY_BOOKING_STATE,
       estado: { a: 'Reservado', viejo: 'Pagado' },
       links: {},
       modes: {},
@@ -111,6 +114,7 @@ describe('almacenamiento', () => {
   it('guarda y recupera reservas y tema', () => {
     const cache = new LocalBookingCache(memory())
     const s: BookingState = {
+      ...EMPTY_BOOKING_STATE,
       estado: { x: 'Pagado' },
       links: { x: 'https://a.io' },
       modes: { 't-1': 'bus' },
@@ -133,8 +137,8 @@ describe('almacenamiento', () => {
     } as unknown as ClaudeDbSync
     const cache = new LocalBookingCache(memory())
     const store = new SyncedBookingStore(cache, remote, 5)
-    store.save({ estado: { a: 'Reservado' }, links: {}, modes: {}, t: 1 })
-    store.save({ estado: { a: 'Pagado' }, links: {}, modes: {}, t: 2 })
+    store.save({ ...EMPTY_BOOKING_STATE, estado: { a: 'Reservado' }, links: {}, modes: {}, t: 1 })
+    store.save({ ...EMPTY_BOOKING_STATE, estado: { a: 'Pagado' }, links: {}, modes: {}, t: 2 })
     assert.equal(cache.load().t, 2)
     assert.equal(pushed.length, 0)
     await new Promise((r) => setTimeout(r, 30))

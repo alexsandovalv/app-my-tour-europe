@@ -61,7 +61,18 @@ realmente (`BookingState.modes`). `modeOf(state, transfer)` resuelve el medio ef
 muestran el mapa (estilo de trazo), la agenda («Tren a Vigo» / «Avión a Vigo») y la pestaña de transporte.
 El plan original se conserva visible para poder compararlo.
 
-## ADR-8: HTML único opcional
+## ADR-8: Presupuesto como cálculo puro sobre el estado del usuario
+
+Lo que el usuario anota (importe pagado y fecha real por reserva, gastos, presupuesto total y tope diario)
+se suma al `BookingState` que ya se persiste y sincroniza, en vez de abrir otro almacén. `computeBudget` es
+una función pura de (viaje, estado, cambio) → informe, de modo que la tabla, las cifras y los dos gráficos
+leen del mismo resultado y no pueden discrepar. Los importes se guardan en la moneda en que se pagaron y se
+convierten al calcular, para no perder el dato original.
+
+Las fechas reales mueven los traslados en la agenda (`eventsOfDay`) y añaden eventos para entradas y
+check-in; el plan original no se modifica.
+
+## ADR-9: HTML único opcional
 
 `npm run build:single` compila Tailwind con su API y empaqueta todo en un solo HTML con esbuild. Sirve para abrir la app sin servidor y para
 publicarla como artefacto de Claude, donde los datos compartidos usan su capacidad `db`

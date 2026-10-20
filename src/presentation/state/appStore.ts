@@ -1,12 +1,20 @@
 import { createStore, type StoreApi } from 'zustand/vanilla'
 import type { BookingStore, PreferencesStore } from '../../application/ports'
 import {
+  addExpense as addExpenseTo,
   cycleStatus,
   decideSync,
+  removeExpense as removeExpenseFrom,
+  setBudgetField,
+  setPaid as setPaidIn,
+  setRealDate as setRealDateIn,
   setTransportMode,
+  updateExpense as updateExpenseIn,
   updateLink,
   type BookingState,
 } from '../../domain/booking'
+import type { BudgetSettings, Expense, ExpenseDraft } from '../../domain/expenses'
+import type { Money } from '../../domain/money'
 import {
   DEFAULT_THEME,
   toggledMode,
@@ -46,6 +54,16 @@ interface BookingsSlice {
   setLink(key: string, raw: string): boolean
   clearLink(key: string): void
   setTransportMode(transferId: string, mode: TransportMode): void
+  /** Importe realmente pagado de una reserva (`null` lo borra). `false` si no es válido. */
+  setPaid(key: string, money: Money | null): boolean
+  /** Fecha real de una reserva (`null` la borra). `false` si no es de noviembre de 2026. */
+  setRealDate(key: string, iso: string | null): boolean
+  /** Devuelve el gasto creado o `null` si los datos no son válidos. */
+  addExpense(draft: ExpenseDraft): Expense | null
+  updateExpense(id: string, draft: ExpenseDraft): boolean
+  removeExpense(id: string): void
+  /** Presupuesto total o tope diario en US$ (`null` vuelve al sugerido). */
+  setBudget(field: keyof BudgetSettings, value: number | null): boolean
   /** Llega una versión remota: gana la más reciente. */
   receiveRemote(remote: BookingState): void
 }
@@ -116,6 +134,37 @@ export function createAppStore(deps: AppStoreDeps): AppStore {
       },
       setTransportMode: (transferId, mode) =>
         commitBooking(setTransportMode(get().booking, transferId, mode, clock())),
+      setPaid: (key, money) => {
+        const next = setPaidIn(get().booking, key, money, clock())
+        if (!next) return false
+        commitBooking(next)
+        return true
+      },
+      setRealDate: (key, iso) => {
+        const next = setRealDateIn(get().booking, key, iso, clock())
+        if (!next) return false
+        commitBooking(next)
+        return true
+      },
+      addExpense: (draft) => {
+        const result = addExpenseTo(get().booking, draft, clock())
+        if (!result) return null
+        commitBooking(result.state)
+        return result.expense
+      },
+      updateExpense: (id, draft) => {
+        const next = updateExpenseIn(get().booking, id, draft, clock())
+        if (!next) return false
+        commitBooking(next)
+        return true
+      },
+      removeExpense: (id) => commitBooking(removeExpenseFrom(get().booking, id, clock())),
+      setBudget: (field, value) => {
+        const next = setBudgetField(get().booking, field, value, clock())
+        if (!next) return false
+        commitBooking(next)
+        return true
+      },
       receiveRemote: (remote) => {
         const decision = decideSync(get().booking, remote)
         if (decision === 'adopt-remote') commitBooking(remote)

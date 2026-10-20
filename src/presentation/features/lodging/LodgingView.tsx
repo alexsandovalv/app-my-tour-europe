@@ -3,7 +3,7 @@ import { formatRange, formatRate, scaleRange } from '../../../domain/money'
 import { nightsOf, stayTotal, summarizeLodging } from '../../../domain/summary'
 import type { Stay } from '../../../domain/trip'
 import { useApp } from '../../AppContext'
-import { PasteBox, StatusButton } from '../../components/BookingControls'
+import { PasteBox, RealFields, StatusButton } from '../../components/BookingControls'
 import { CityButton } from '../../components/CityButton'
 import { ExtLink } from '../../components/Links'
 import { CITY_COLOR, cssVars } from '../../theme'
@@ -36,6 +36,7 @@ function HostelRow({ stay }: { stay: Stay }) {
           </CityButton>
         </div>
         <PasteBox itemKey={stay.id} />
+        <RealFields itemKey={stay.id} />
       </div>
       <StatusButton itemKey={stay.id} />
     </li>
@@ -80,6 +81,7 @@ function ApartmentRow({ stay }: { stay: Stay }) {
           </CityButton>
         </div>
         <PasteBox itemKey={stay.id} />
+        <RealFields itemKey={stay.id} />
       </div>
       <StatusButton itemKey={stay.id} />
     </li>

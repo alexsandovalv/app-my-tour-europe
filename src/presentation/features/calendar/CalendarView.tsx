@@ -1,3 +1,4 @@
+import { confirmedItems } from '../../../domain/agenda'
 import { weekdayLong, weekdayShort } from '../../../domain/calendar'
 import { nightsOf } from '../../../domain/summary'
 import type { DayPlan } from '../../../domain/trip'
@@ -7,6 +8,9 @@ import { CITY_COLOR, cssVars } from '../../theme'
 import { ui } from '../../ui'
 
 export function DayCard({ day }: { day: DayPlan }) {
+  const { trip } = useApp()
+  const booking = useAppStore((s) => s.booking)
+  const confirmed = confirmedItems(trip, booking).filter((c) => c.day === day.day)
   const tag = day.kind === 'travel' ? 'traslado' : day.kind === 'excursion' ? 'excursión' : null
   return (
     <li
@@ -40,6 +44,12 @@ export function DayCard({ day }: { day: DayPlan }) {
             'Nada que reservar'
           )}
         </p>
+        {confirmed.length > 0 && (
+          <p className="mt-1.5 mb-0 text-[.85rem]" data-testid="confirmed">
+            <b className="font-semibold text-paid">Confirmado: </b>
+            {confirmed.map((c) => c.title).join(' · ')}
+          </p>
+        )}
       </div>
     </li>
   )

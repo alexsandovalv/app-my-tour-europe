@@ -4,6 +4,7 @@ import { formatRate } from '../domain/money'
 import { useApp, useAppStore } from './AppContext'
 import { ThemeControls } from './components/ThemeControls'
 import { AgendaView } from './features/agenda/AgendaView'
+import { BudgetView } from './features/budget/BudgetView'
 import { CalendarView } from './features/calendar/CalendarView'
 import { CityModal } from './features/city/CityModal'
 import { LodgingView } from './features/lodging/LodgingView'
@@ -23,6 +24,7 @@ const TABS = [
   { id: 'hos', label: 'Dónde dormir', view: LodgingView },
   { id: 'tra', label: 'Trenes y vuelos', view: TransportView },
   { id: 'ent', label: 'Entradas', view: TicketsView },
+  { id: 'bud', label: 'Presupuesto', view: BudgetView },
 ] as const satisfies ReadonlyArray<{ id: TabId; label: string; view: () => ReactNode }>
 
 function Header() {

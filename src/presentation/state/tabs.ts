@@ -1,4 +1,4 @@
-export const TAB_IDS = ['map', 'cal', 'age', 'mad', 'hos', 'tra', 'ent'] as const
+export const TAB_IDS = ['map', 'cal', 'age', 'mad', 'hos', 'tra', 'ent', 'bud'] as const
 export type TabId = (typeof TAB_IDS)[number]
 
 export function isTabId(value: string): value is TabId {

@@ -8,6 +8,13 @@ plan de Madrid (21 a 26), hospedaje, trenes y vuelos, entradas, y seguimiento de
   continuo = tren, rayas = bus, punteado = avión.
 - **Medio de transporte real por tramo**: en _Trenes y vuelos_ eliges si fuiste en avión, tren o bus; el mapa y
   la agenda se actualizan y se conserva el plan original.
+- **Pagué y fecha real en cada reserva**: junto al link de cada hospedaje, traslado o entrada se anota lo
+  realmente pagado (US$ o EUR, que se convierte) y la fecha confirmada. Un importe marca la reserva como
+  _Pagado_; la fecha mueve el traslado de día en la agenda y aparece como «Confirmado» en el calendario
+  (las entradas y los check-in se muestran como eventos de ese día).
+- **Presupuesto**: cifras (total, gastado, por pagar, lo que te queda, promedio diario), tabla por
+  categoría con presupuestado, real, por pagar y diferencia, dos gráficos (por categoría y gasto diario
+  contra el tope) y un registro de gastos del día a día con alerta al pasar el tope diario.
 - **Modo día / noche** con un botón en la cabecera (sigue al sistema hasta que lo cambias) y un menú de tema
   con cuatro acentos de color.
 
@@ -45,6 +52,8 @@ src/
 │   ├── summary.ts     totales de hospedaje, transporte y presupuesto
 │   ├── booking.ts     estados de reserva, medio de transporte elegido, enlaces, sincronización
 │   ├── transport.ts   avión / tren / bus y el medio efectivo de cada tramo
+│   ├── expenses.ts    gastos del día a día, fechas de noviembre, ajustes de presupuesto
+│   ├── budget.ts      presupuesto vs real: partidas, por pagar, tope diario, serie por día
 │   ├── preferences.ts tema: modo claro/oscuro/sistema y acento
 │   └── links.ts       URLs de búsqueda en Booking y Airbnb
 ├── application/     Casos de uso y puertos (interfaces).
@@ -57,7 +66,7 @@ src/
 ├── presentation/    React + Zustand + Tailwind. Solo usa `application` y `domain`.
 │   ├── state/         store de Zustand (navegación, tema, reservas) y su contexto
 │   ├── styles/        index.css: Tailwind, tokens del tema, modo oscuro y acentos
-│   ├── features/      mapa, calendario, agenda, hospedaje, transporte, entradas, Madrid, ciudad
+│   ├── features/      mapa, calendario, agenda, hospedaje, transporte, entradas, Madrid, ciudad, presupuesto
 │   └── components/    iconos, selector de medio, controles de reserva y de tema
 └── composition.ts   Raíz de composición: único sitio que une puertos con implementaciones.
 ```
@@ -74,6 +83,25 @@ referencia del BCE del 19 de octubre de 2026: **1 € = US$1,1225** (`infrastruc
 conversión alcanza a los rangos numéricos y a los importes escritos dentro de los textos (`€45` → `US$51`);
 un test comprueba que no queda ningún `€` en lo que ve el usuario. Para actualizar el cambio basta con
 editar ese valor.
+
+### Presupuesto
+
+Todo el cálculo está en `domain/budget.ts` (función pura `computeBudget`), así que se prueba sin navegador
+(`tests/budget.test.ts`).
+
+- **Total**: lo defines tú; si no, se sugiere con las reservas del plan (punto medio de cada rango) más
+  US$70 por día de viaje.
+- **Partidas**: hospedaje y traslados parten del estimado del plan; lo que queda del total se reparte entre
+  entradas (20 %), comida (40 %), transporte local (15 %), souvenirs (10 %) e imprevistos (el resto), de
+  modo que las partidas siempre suman el total.
+- **Real**: lo pagado en cada reserva (convertido a US$ con el cambio del BCE si se pagó en euros) más los
+  gastos registrados. Una reserva sin importe cuenta en **Por pagar** por su estimado.
+- **Diferencia** = presupuestado − real − por pagar.
+- **Tope diario**: sugerido con lo presupuestado para comida, transporte local, souvenirs e imprevistos
+  entre los días; editable. Los gastos del día a día de cada fecha se comparan contra él.
+
+Los gastos, los importes pagados, las fechas reales y el presupuesto viajan en el mismo estado que las
+reservas (`BookingState`), por lo que se guardan en `localStorage` y se sincronizan igual.
 
 ### Estado con Zustand
 

@@ -124,14 +124,78 @@ describe('store de Zustand: reservas', () => {
   })
 
   it('adopta un remoto más nuevo y conserva lo local si es más nuevo', () => {
-    const local: BookingState = { estado: { a: 'Reservado' }, links: {}, modes: {}, t: 50 }
+    const local: BookingState = {
+      ...EMPTY_BOOKING_STATE,
+      estado: { a: 'Reservado' },
+      links: {},
+      modes: {},
+      t: 50,
+    }
     const { store, bookings } = setup({ booking: local })
-    bookings.remote({ estado: { a: 'Pagado' }, links: {}, modes: {}, t: 40 })
+    bookings.remote({
+      ...EMPTY_BOOKING_STATE,
+      estado: { a: 'Pagado' },
+      links: {},
+      modes: {},
+      t: 40,
+    })
     assert.equal(store.getState().booking.estado.a, 'Reservado')
     assert.equal(bookings.saved.at(-1)?.t, 50) // reenvía lo local
-    bookings.remote({ estado: { a: 'Pagado' }, links: {}, modes: { 't-4': 'bus' }, t: 70 })
+    bookings.remote({
+      ...EMPTY_BOOKING_STATE,
+      estado: { a: 'Pagado' },
+      links: {},
+      modes: { 't-4': 'bus' },
+      t: 70,
+    })
     assert.equal(store.getState().booking.estado.a, 'Pagado')
     assert.equal(store.getState().booking.modes['t-4'], 'bus')
     assert.equal(bookings.saved.at(-1)?.t, 70) // lo adoptado queda guardado en local
+  })
+})
+
+describe('store de Zustand: pagos, fechas, gastos y presupuesto', () => {
+  const draft = {
+    date: '2026-11-08',
+    category: 'comida' as const,
+    description: 'Menú',
+    amount: 12,
+    currency: 'USD' as const,
+  }
+
+  it('guarda el importe pagado y la fecha real, y marca la reserva', () => {
+    const { store, bookings } = setup({ now: 50 })
+    assert.equal(store.getState().setPaid('t-1', { amount: 30, currency: 'EUR' }), true)
+    assert.equal(store.getState().setRealDate('t-1', '2026-11-07'), true)
+    const b = store.getState().booking
+    assert.deepEqual(b.paid['t-1'], { amount: 30, currency: 'EUR' })
+    assert.equal(b.dates['t-1'], '2026-11-07')
+    assert.equal(b.estado['t-1'], 'Pagado')
+    assert.equal(bookings.saved.at(-1)?.t, 50)
+    assert.equal(store.getState().setPaid('t-1', { amount: -1, currency: 'USD' }), false)
+    assert.equal(store.getState().setRealDate('t-1', '2026-12-25'), false)
+    assert.deepEqual(store.getState().booking.paid['t-1'], { amount: 30, currency: 'EUR' })
+  })
+
+  it('agrega, edita y borra gastos y lo persiste', () => {
+    const { store, bookings } = setup()
+    const e = store.getState().addExpense(draft)
+    assert.ok(e)
+    assert.equal(store.getState().addExpense({ ...draft, amount: 0 }), null)
+    assert.equal(store.getState().updateExpense(e.id, { ...draft, amount: 20 }), true)
+    assert.equal(store.getState().booking.expenses[0]?.amount, 20)
+    store.getState().removeExpense(e.id)
+    assert.equal(store.getState().booking.expenses.length, 0)
+    assert.ok((bookings.saved.length ?? 0) >= 3)
+  })
+
+  it('cambia el presupuesto total y el tope diario', () => {
+    const { store } = setup()
+    assert.equal(store.getState().setBudget('total', 4200), true)
+    assert.equal(store.getState().setBudget('dailyCap', 55), true)
+    assert.deepEqual(store.getState().booking.budget, { total: 4200, dailyCap: 55 })
+    assert.equal(store.getState().setBudget('total', -1), false)
+    assert.equal(store.getState().setBudget('total', null), true)
+    assert.equal(store.getState().booking.budget.total, null)
   })
 })

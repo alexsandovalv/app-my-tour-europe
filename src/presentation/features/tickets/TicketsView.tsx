@@ -1,5 +1,5 @@
 import { useApp } from '../../AppContext'
-import { PasteBox, StatusButton } from '../../components/BookingControls'
+import { PasteBox, RealFields, StatusButton } from '../../components/BookingControls'
 import { ExtLink } from '../../components/Links'
 import { ui } from '../../ui'
 
@@ -25,6 +25,7 @@ export function TicketsView() {
                 {t.extraLink && <ExtLink href={t.extraLink.url}>{t.extraLink.label}</ExtLink>}
               </div>
               <PasteBox itemKey={t.id} />
+              <RealFields itemKey={t.id} />
             </div>
             <StatusButton itemKey={t.id} />
           </li>

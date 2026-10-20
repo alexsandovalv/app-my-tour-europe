@@ -4,7 +4,7 @@ import { summarizeTransport } from '../../../domain/summary'
 import { MODE_LABEL, modeOf } from '../../../domain/transport'
 import type { Transfer } from '../../../domain/trip'
 import { useApp, useAppStore } from '../../AppContext'
-import { PasteBox, StatusButton } from '../../components/BookingControls'
+import { PasteBox, RealFields, StatusButton } from '../../components/BookingControls'
 import { LinkList } from '../../components/Links'
 import { ModePicker } from '../../components/ModePicker'
 import { ModeIcon } from '../../components/UiIcons'
@@ -48,6 +48,7 @@ function TransferRow({ transfer }: { transfer: Transfer }) {
         </div>
         <ModePicker transfer={transfer} />
         <PasteBox itemKey={transfer.id} />
+        <RealFields itemKey={transfer.id} />
       </div>
       <StatusButton itemKey={transfer.id} />
     </li>
