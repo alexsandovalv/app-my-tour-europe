@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react'
 import type { TransportMode } from '../../domain/trip'
 
-function Svg({ children, className = 'size-5' }: { children: ReactNode; className?: string }) {
+function Svg({ children, className = 'size-4' }: { children: ReactNode; className?: string }) {
   return (
     <svg
       viewBox="0 0 24 24"

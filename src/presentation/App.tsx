@@ -38,8 +38,8 @@ function Header() {
 
   return (
     <header className="sticky top-[env(safe-area-inset-top,0px)] z-[5] -mx-4 border-b border-line bg-bg px-4 pt-3">
-      <div className="flex flex-wrap items-end justify-between gap-x-5 gap-y-3">
-        <div>
+      <div className="grid grid-cols-[1fr_auto] items-start gap-x-4 gap-y-3 sm:grid-cols-[1fr_14rem]">
+        <div className="min-w-0 sm:row-span-2">
           <h1 className="text-[clamp(1.5rem,5.5vw,2.2rem)] leading-[1.05] font-extrabold tracking-tight">
             {trip.title}
           </h1>
@@ -47,23 +47,23 @@ function Header() {
             Madrid · Galicia · Porto · Roma · Florencia · Barcelona · París · Precios en US$
           </div>
         </div>
-        <div className="flex flex-wrap items-end gap-4">
-          <div className="min-w-[180px] flex-[0_1_220px]" aria-live="polite">
-            <div className="flex justify-between font-mono text-xs text-muted">
-              <span>Reservas hechas</span>
-              <span id="progTxt">
-                {done} / {total}
-              </span>
-            </div>
-            <div className="mt-[5px] h-1.5 overflow-hidden rounded-[3px] bg-line">
-              <i
-                id="progBar"
-                className="block h-full bg-accent transition-[width] duration-300"
-                style={{ width: `${total ? (100 * done) / total : 0}%` }}
-              />
-            </div>
-          </div>
+        <div className="justify-self-end">
           <ThemeControls />
+        </div>
+        <div className="col-span-2 sm:col-span-1 sm:self-end" aria-live="polite">
+          <div className="flex justify-between font-mono text-xs text-muted">
+            <span>Reservas hechas</span>
+            <span id="progTxt">
+              {done} / {total}
+            </span>
+          </div>
+          <div className="mt-[5px] h-1.5 overflow-hidden rounded-[3px] bg-line">
+            <i
+              id="progBar"
+              className="block h-full bg-accent transition-[width] duration-300"
+              style={{ width: `${total ? (100 * done) / total : 0}%` }}
+            />
+          </div>
         </div>
       </div>
       <nav
@@ -115,20 +115,22 @@ export function App() {
   const city = openCityId ? trip.cities[openCityId] : null
 
   return (
-    <div className="mx-auto max-w-[860px] pt-5 pb-14">
-      <Header />
-      {TABS.map(({ id, view: View }) => (
-        <div key={id} hidden={id !== tab}>
-          <View />
-        </div>
-      ))}
-      {city && <CityModal city={city} onClose={closeCity} />}
-      <p className={`${ui.note} mt-7 max-w-[64ch] text-[.8rem]`}>
-        Los enlaces abren búsquedas o webs oficiales; no reservan nada por sí solos. Verifica
-        precio, horario y disponibilidad antes de pagar. Importes en dólares (US$) al cambio de
-        referencia del BCE del 19 de octubre de 2026 ({formatRate(rate)}). Tu estado de cada reserva
-        y tu tema se guardan en esta página.
-      </p>
+    <div className="min-h-dvh bg-bg px-4 font-body text-[15px] leading-normal text-ink">
+      <div className="mx-auto max-w-[860px] pt-5 pb-14">
+        <Header />
+        {TABS.map(({ id, view: View }) => (
+          <div key={id} hidden={id !== tab}>
+            <View />
+          </div>
+        ))}
+        {city && <CityModal city={city} onClose={closeCity} />}
+        <p className={`${ui.note} mt-7 max-w-[64ch] text-[.8rem]`}>
+          Los enlaces abren búsquedas o webs oficiales; no reservan nada por sí solos. Verifica
+          precio, horario y disponibilidad antes de pagar. Importes en dólares (US$) al cambio de
+          referencia del BCE del 19 de octubre de 2026 ({formatRate(rate)}). Tu estado de cada
+          reserva y tu tema se guardan en esta página.
+        </p>
+      </div>
     </div>
   )
 }

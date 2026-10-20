@@ -125,10 +125,31 @@
   --soft: #3a2219;
 }
 
+/*
+ * Fuera de las capas de Tailwind a propósito: cuando la app corre incrustada (artefacto de Claude),
+ * la página anfitriona define su propio fondo y color de texto con estilos sin capa, que ganarían
+ * a los de @layer. Así el fondo y el esquema de color siempre son los del tema elegido.
+ */
+:root {
+  color-scheme: light;
+}
+:root.dark {
+  color-scheme: dark;
+}
+html,
+body {
+  margin: 0 !important;
+  padding: 0 !important;
+  background: var(--bg) !important;
+  color: var(--ink) !important;
+}
+
+/* Los títulos toman el color del tema aunque la página anfitriona estilice h1–h3. */
+#root :where(h1, h2, h3) {
+  color: inherit;
+}
+
 @layer base {
-  body {
-    @apply bg-bg px-4 font-body text-[15px] leading-normal text-ink;
-  }
   a {
     @apply text-accent underline-offset-[3px];
   }

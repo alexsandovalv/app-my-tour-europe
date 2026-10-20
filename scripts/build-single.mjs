@@ -43,7 +43,7 @@ async function tailwindCss() {
   const candidates = new Set(
     texts
       .join('\n')
-      .split(/[^\w\-:./[\]()%#,='!@&>_*+]+/)
+      .split(/[^\w\-:./[\]()%#,=!@&>_*+]+/)
       .filter(Boolean),
   )
   const css = compiler.build([...candidates])

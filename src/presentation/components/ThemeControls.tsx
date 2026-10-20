@@ -13,16 +13,16 @@ const ACCENT_LABEL: Record<AccentId, string> = {
   terracota: 'Terracota',
 }
 
-/** Color de muestra de cada acento (el real se aplica con variables CSS). */
-const ACCENT_SWATCH: Record<AccentId, string> = {
-  esmeralda: 'bg-[#0b6b58] dark:bg-[#4fc2a6]',
-  azul: 'bg-[#1d5fb4] dark:bg-[#7fb0f0]',
-  violeta: 'bg-[#6d3fb0] dark:bg-[#b79bea]',
-  terracota: 'bg-[#b4482a] dark:bg-[#ee8b6e]',
+/** Color de muestra de cada acento: [claro, oscuro]. El real se aplica con variables CSS. */
+const ACCENT_SWATCH: Record<AccentId, readonly [string, string]> = {
+  esmeralda: ['#0b6b58', '#4fc2a6'],
+  azul: ['#1d5fb4', '#7fb0f0'],
+  violeta: ['#6d3fb0', '#b79bea'],
+  terracota: ['#b4482a', '#ee8b6e'],
 }
 
 const iconButton =
-  'inline-flex size-10 cursor-pointer items-center justify-center rounded-full border border-line bg-surface text-ink hover:border-accent'
+  'inline-flex h-8 w-10 cursor-pointer items-center justify-center text-muted transition-colors hover:bg-soft hover:text-ink aria-expanded:bg-soft aria-expanded:text-ink'
 
 /** Botón día/noche y menú para elegir modo y color de acento. */
 export function ThemeControls() {
@@ -52,30 +52,32 @@ export function ThemeControls() {
   }, [open])
 
   return (
-    <div ref={box} className="relative flex items-center gap-2">
-      <button
-        type="button"
-        id="themeToggle"
-        className={iconButton}
-        aria-pressed={dark}
-        aria-label={dark ? 'Cambiar a modo día' : 'Cambiar a modo noche'}
-        title={dark ? 'Modo día' : 'Modo noche'}
-        onClick={toggleDark}
-      >
-        {dark ? <SunIcon /> : <MoonIcon />}
-      </button>
-      <button
-        type="button"
-        id="themeMenuBtn"
-        className={iconButton}
-        aria-expanded={open}
-        aria-controls="themeMenu"
-        aria-label="Personalizar tema"
-        title="Personalizar tema"
-        onClick={() => setOpen((v) => !v)}
-      >
-        <PaletteIcon />
-      </button>
+    <div ref={box} className="relative">
+      <div className="inline-flex divide-x divide-line overflow-hidden rounded-lg border border-line bg-surface">
+        <button
+          type="button"
+          id="themeToggle"
+          className={iconButton}
+          aria-pressed={dark}
+          aria-label={dark ? 'Cambiar a modo día' : 'Cambiar a modo noche'}
+          title={dark ? 'Modo día' : 'Modo noche'}
+          onClick={toggleDark}
+        >
+          {dark ? <SunIcon /> : <MoonIcon />}
+        </button>
+        <button
+          type="button"
+          id="themeMenuBtn"
+          className={iconButton}
+          aria-expanded={open}
+          aria-controls="themeMenu"
+          aria-label="Personalizar tema"
+          title="Personalizar tema"
+          onClick={() => setOpen((v) => !v)}
+        >
+          <PaletteIcon />
+        </button>
+      </div>
       {open && (
         <div
           id="themeMenu"
@@ -117,7 +119,8 @@ export function ThemeControls() {
                   aria-checked={a === accent}
                   aria-label={ACCENT_LABEL[a]}
                   title={ACCENT_LABEL[a]}
-                  className={`size-8 cursor-pointer rounded-full border-2 border-surface outline-1 outline-line aria-checked:outline-3 aria-checked:outline-ink ${ACCENT_SWATCH[a]}`}
+                  className="size-7 cursor-pointer rounded-full border-2 border-surface outline-1 outline-line aria-checked:outline-2 aria-checked:outline-ink"
+                  style={{ backgroundColor: ACCENT_SWATCH[a][dark ? 1 : 0] }}
                   onClick={() => setAccent(a)}
                 />
               ))}

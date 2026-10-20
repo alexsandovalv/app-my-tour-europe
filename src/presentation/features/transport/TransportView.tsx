@@ -72,7 +72,7 @@ export function TransportView() {
         </span>
         {summary.excursions.map((t) => (
           <div key={t.id}>
-            <b>{formatRange(t.price)}</b> por persona por la excursión: {t.title.toLowerCase()}
+            <b>{formatRange(t.price)}</b> por persona por la excursión: {t.title}
           </div>
         ))}
         <small>
