@@ -1,20 +1,25 @@
-import { confirmedItems } from '../../../domain/agenda'
+import { confirmedItems, dayProgress } from '../../../domain/agenda'
 import { weekdayLong, weekdayShort } from '../../../domain/calendar'
 import { nightsOf } from '../../../domain/summary'
 import type { DayPlan } from '../../../domain/trip'
 import { CityButton } from '../../components/CityButton'
+import { DayDoneBar } from '../../components/DayDoneBar'
 import { useApp, useAppStore } from '../../AppContext'
 import { CITY_COLOR, cssVars } from '../../theme'
 import { ui } from '../../ui'
 
-export function DayCard({ day }: { day: DayPlan }) {
+/** `scope` distingue los ids cuando la misma tarjeta aparece en el calendario y en Madrid. */
+export function DayCard({ day, scope = 'cal' }: { day: DayPlan; scope?: string }) {
   const { trip } = useApp()
   const booking = useAppStore((s) => s.booking)
   const confirmed = confirmedItems(trip, booking).filter((c) => c.day === day.day)
+  const progress = dayProgress(trip, booking, day.day)
+  const complete = progress.total > 0 && progress.done === progress.total
   const tag = day.kind === 'travel' ? 'traslado' : day.kind === 'excursion' ? 'excursión' : null
   return (
     <li
       data-testid="day-card"
+      data-complete={complete}
       className="grid grid-cols-[62px_minmax(0,1fr)] rounded-md border border-l-[5px] border-line border-l-[color:var(--cc)] bg-surface"
       style={cssVars({ '--cc': CITY_COLOR[day.cityId] })}
     >
@@ -27,6 +32,14 @@ export function DayCard({ day }: { day: DayPlan }) {
       <div className="min-w-0 px-3.5 py-2.5">
         <div className="flex flex-wrap items-baseline gap-x-2.5 gap-y-1.5 font-semibold">
           <CityButton cityId={day.cityId}>{day.cityLabel}</CityButton>
+          {complete && (
+            <em
+              data-testid="day-complete"
+              className="rounded-[3px] bg-paid-bg px-1.5 py-0.5 font-mono text-[.65rem] tracking-wider text-paid not-italic uppercase"
+            >
+              ✓ Día hecho
+            </em>
+          )}
           {tag && (
             <em className="rounded-[3px] bg-soft px-1.5 py-0.5 font-mono text-[.65rem] tracking-wider text-accent not-italic uppercase">
               {tag}
@@ -44,6 +57,9 @@ export function DayCard({ day }: { day: DayPlan }) {
             'Nada que reservar'
           )}
         </p>
+        <div className="mt-1.5">
+          <DayDoneBar trip={trip} day={day.day} scope={scope} />
+        </div>
         {confirmed.length > 0 && (
           <p className="mt-1.5 mb-0 text-[.85rem]" data-testid="confirmed">
             <b className="font-semibold text-paid">Confirmado: </b>

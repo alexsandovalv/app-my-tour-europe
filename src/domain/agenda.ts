@@ -34,6 +34,29 @@ export function describeEvent(trip: Trip, event: AgendaEvent, state: BookingStat
   return { ...event, title: `${MODE_LABEL[modeOf(state, transfer)]} a ${destination}` }
 }
 
+const slug = (text: string): string =>
+  text
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-|-$/g, '')
+    .slice(0, 40)
+
+/**
+ * Clave estable de cada evento del plan, en el mismo orden que `trip.agenda`.
+ * Un traslado usa el id del traslado, así que marcarlo en la agenda o en «Trenes y vuelos» es lo mismo.
+ */
+export function eventKeys(trip: Trip): readonly string[] {
+  const seen = new Map<string, number>()
+  return trip.agenda.map((e) => {
+    const base = e.transferId ?? `ev:${e.day}:${slug(e.title)}`
+    const n = (seen.get(base) ?? 0) + 1
+    seen.set(base, n)
+    return n === 1 ? base : `${base}-${n}`
+  })
+}
+
 export interface ConfirmedItem {
   readonly key: string
   readonly kind: 'stay' | 'transfer' | 'ticket'
@@ -85,10 +108,11 @@ export function eventsOfDay(
   const moved = new Map(
     confirmed.filter((c) => c.kind === 'transfer').map((c) => [c.key, c.day] as const),
   )
+  const keys = eventKeys(trip)
   const planned = trip.agenda
-    .map((event) => {
+    .map((event, i) => {
       const realDay = event.transferId ? moved.get(event.transferId) : undefined
-      const base = describeEvent(trip, event, state)
+      const base = { ...describeEvent(trip, event, state), key: keys[i] }
       return realDay === undefined
         ? base
         : { ...base, day: realDay, note: `${CONFIRMED_NOTE}. ${base.note}`.trim() }
@@ -99,6 +123,7 @@ export function eventsOfDay(
   const extra: AgendaEvent[] = confirmed
     .filter((c) => c.day === day && (c.kind !== 'transfer' || !plannedTransfers.has(c.key)))
     .map((c) => ({
+      key: c.key,
       day,
       title: c.title,
       note: CONFIRMED_NOTE,
@@ -114,6 +139,32 @@ export function eventsOfDay(
     .map((event, index) => ({ event, index }))
     .sort((a, b) => (a.event.time ?? '').localeCompare(b.event.time ?? '') || a.index - b.index)
     .map(({ event }) => event)
+}
+
+export interface Progress {
+  readonly done: number
+  readonly total: number
+}
+
+/** Actividades del día y cuántas están hechas. */
+export function dayProgress(trip: Trip, state: BookingState, day: number): Progress {
+  const events = eventsOfDay(trip, day, state)
+  return {
+    total: events.length,
+    done: events.filter((e) => e.key !== undefined && state.done[e.key] === true).length,
+  }
+}
+
+/** Todas las actividades de noviembre y cuántas están hechas. */
+export function agendaProgress(trip: Trip, state: BookingState): Progress {
+  let done = 0
+  let total = 0
+  for (let day = 1; day <= 30; day++) {
+    const p = dayProgress(trip, state, day)
+    done += p.done
+    total += p.total
+  }
+  return { done, total }
 }
 
 /** Noche que se duerme esa fecha, o `null` si no hay estancia registrada. */

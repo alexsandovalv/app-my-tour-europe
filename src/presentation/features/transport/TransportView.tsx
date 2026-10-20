@@ -4,7 +4,7 @@ import { summarizeTransport } from '../../../domain/summary'
 import { MODE_LABEL, modeOf } from '../../../domain/transport'
 import type { Transfer } from '../../../domain/trip'
 import { useApp, useAppStore } from '../../AppContext'
-import { PasteBox, RealFields, StatusButton } from '../../components/BookingControls'
+import { PasteBox, RealFields, RowActions, useDone } from '../../components/BookingControls'
 import { LinkList } from '../../components/Links'
 import { ModePicker } from '../../components/ModePicker'
 import { ModeIcon } from '../../components/UiIcons'
@@ -13,15 +13,19 @@ import { ui } from '../../ui'
 
 function TransferRow({ transfer }: { transfer: Transfer }) {
   const mode = useAppStore((s) => modeOf(s.booking, transfer))
+  const done = useDone(transfer.id)
   return (
     <li
       data-testid="row"
       data-transfer={transfer.id}
-      className={`${ui.row} border-l-[5px] border-l-[color:var(--cc)]`}
+      data-done={done}
+      className={`${ui.row} border-l-[5px] border-l-[color:var(--cc)]${done ? ' opacity-70' : ''}`}
       style={cssVars({ '--cc': CITY_COLOR[transfer.to] })}
     >
       <div>
-        <h3 className={`${ui.rowTitle} flex flex-wrap items-center gap-2`}>
+        <h3
+          className={`${ui.rowTitle} flex flex-wrap items-center gap-2${done ? ' line-through decoration-muted' : ''}`}
+        >
           {transfer.title}
           <span
             data-testid="mode-badge"
@@ -50,7 +54,7 @@ function TransferRow({ transfer }: { transfer: Transfer }) {
         <PasteBox itemKey={transfer.id} />
         <RealFields itemKey={transfer.id} />
       </div>
-      <StatusButton itemKey={transfer.id} />
+      <RowActions itemKey={transfer.id} doneLabel={`Traslado: ${transfer.title}`} />
     </li>
   )
 }

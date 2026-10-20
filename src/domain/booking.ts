@@ -31,6 +31,8 @@ export interface BookingState {
   readonly dates: Readonly<Record<string, string>>
   readonly expenses: readonly Expense[]
   readonly budget: BudgetSettings
+  /** Lo ya cumplido: actividades de la agenda, reservas usadas y puntos de la lista previa al viaje. */
+  readonly done: Readonly<Record<string, true>>
   /** Marca de tiempo (ms) de la última modificación local; sirve para resolver conflictos. */
   readonly t: number
 }
@@ -43,6 +45,7 @@ export const EMPTY_BOOKING_STATE: BookingState = {
   dates: {},
   expenses: [],
   budget: DEFAULT_BUDGET_SETTINGS,
+  done: {},
   t: 0,
 }
 
@@ -89,6 +92,19 @@ export function sanitizeBookingState(raw: unknown): BookingState {
   if (typeof obj.dates === 'object' && obj.dates !== null) {
     for (const [k, v] of Object.entries(obj.dates)) if (isNovemberIso(v)) dates[k] = v
   }
+  const done: Record<string, true> = {}
+  if (typeof obj.done === 'object' && obj.done !== null) {
+    for (const [k, v] of Object.entries(obj.done)) {
+      if (
+        v === true &&
+        k.length > 0 &&
+        k.length <= MAX_KEY &&
+        Object.keys(done).length < MAX_DONE
+      ) {
+        done[k] = true
+      }
+    }
+  }
   const t = typeof obj.t === 'number' && Number.isFinite(obj.t) ? obj.t : 0
   return {
     estado,
@@ -98,6 +114,7 @@ export function sanitizeBookingState(raw: unknown): BookingState {
     dates,
     expenses: sanitizeExpenses(obj.expenses),
     budget: sanitizeBudgetSettings(obj.budget),
+    done,
     t,
   }
 }
@@ -198,6 +215,33 @@ export function setBudgetField(
   return { ...state, budget, t: now }
 }
 
+const MAX_KEY = 120
+const MAX_DONE = 1000
+
+export const isDone = (state: BookingState, key: string): boolean => state.done[key] === true
+
+/** Marca o desmarca varias claves de una vez (p. ej. todas las actividades de un día). */
+export function setDoneMany(
+  state: BookingState,
+  keys: readonly string[],
+  value: boolean,
+  now: number,
+): BookingState {
+  const done = { ...state.done }
+  for (const key of keys) {
+    if (value) done[key] = true
+    else delete done[key]
+  }
+  return { ...state, done, t: now }
+}
+
+export const setDone = (
+  state: BookingState,
+  key: string,
+  value: boolean,
+  now: number,
+): BookingState => setDoneMany(state, [key], value, now)
+
 export type LinkResult =
   | { readonly ok: true; readonly state: BookingState }
   | { readonly ok: false; readonly reason: 'invalid-url' }
@@ -239,6 +283,7 @@ export function decideSync(local: BookingState, remote: BookingState | null): Sy
     Object.keys(local.modes).length > 0 ||
     Object.keys(local.paid).length > 0 ||
     Object.keys(local.dates).length > 0 ||
+    Object.keys(local.done).length > 0 ||
     local.expenses.length > 0 ||
     local.budget.total !== null ||
     local.budget.dailyCap !== null

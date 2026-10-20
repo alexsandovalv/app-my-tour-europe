@@ -75,6 +75,7 @@ export class ClaudeDbSync {
         dates: state.dates,
         expenses: state.expenses,
         budget: state.budget,
+        done: state.done,
         t: state.t,
       })
       .catch(() => undefined)

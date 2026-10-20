@@ -12,6 +12,9 @@ plan de Madrid (21 a 26), hospedaje, trenes y vuelos, entradas, y seguimiento de
   realmente pagado (US$ o EUR, que se convierte) y la fecha confirmada. Un importe marca la reserva como
   _Pagado_; la fecha mueve el traslado de día en la agenda y aparece como «Confirmado» en el calendario
   (las entradas y los check-in se muestran como eventos de ese día).
+- **Hecho**: casilla por actividad en la agenda (con contador por día y del mes, «Marcar todo el día» y
+  «Día hecho» en el calendario), botón «Hecho» en cada entrada, traslado y hospedaje, y casillas en la lista
+  «Antes de salir de Lima». Un traslado marcado en la agenda es el mismo que en «Trenes y vuelos».
 - **Presupuesto**: cifras (total, gastado, por pagar, lo que te queda, promedio diario), tabla por
   categoría con presupuestado, real, por pagar y diferencia, dos gráficos (por categoría y gasto diario
   contra el tope) y un registro de gastos del día a día con alerta al pasar el tope diario.

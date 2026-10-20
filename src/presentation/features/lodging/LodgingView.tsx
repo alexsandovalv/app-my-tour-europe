@@ -3,7 +3,7 @@ import { formatRange, formatRate, scaleRange } from '../../../domain/money'
 import { nightsOf, stayTotal, summarizeLodging } from '../../../domain/summary'
 import type { Stay } from '../../../domain/trip'
 import { useApp } from '../../AppContext'
-import { PasteBox, RealFields, StatusButton } from '../../components/BookingControls'
+import { PasteBox, RealFields, RowActions, useDone } from '../../components/BookingControls'
 import { CityButton } from '../../components/CityButton'
 import { ExtLink } from '../../components/Links'
 import { CITY_COLOR, cssVars } from '../../theme'
@@ -13,14 +13,18 @@ const rowAccent = 'border-l-[5px] border-l-[color:var(--cc)]'
 
 function HostelRow({ stay }: { stay: Stay }) {
   const n = nightsOf(stay)
+  const done = useDone(stay.id)
   return (
     <li
       data-testid="row"
-      className={`${ui.row} ${rowAccent}`}
+      data-done={done}
+      className={`${ui.row} ${rowAccent}${done ? ' opacity-70' : ''}`}
       style={cssVars({ '--cc': CITY_COLOR[stay.cityId] })}
     >
       <div>
-        <h3 className={ui.rowTitle}>{stay.name}</h3>
+        <h3 className={`${ui.rowTitle}${done ? ' line-through decoration-muted' : ''}`}>
+          {stay.name}
+        </h3>
         <div className={ui.meta}>
           {stay.checkIn} a {stay.checkOut} nov · {n} {n === 1 ? 'noche' : 'noches'}
         </div>
@@ -38,7 +42,7 @@ function HostelRow({ stay }: { stay: Stay }) {
         <PasteBox itemKey={stay.id} />
         <RealFields itemKey={stay.id} />
       </div>
-      <StatusButton itemKey={stay.id} />
+      <RowActions itemKey={stay.id} doneLabel={`Estancia: ${stay.name}`} />
     </li>
   )
 }
@@ -47,14 +51,18 @@ function ApartmentRow({ stay }: { stay: Stay }) {
   const { trip } = useApp()
   const n = nightsOf(stay)
   const zones = trip.guides.madrid.zones
+  const done = useDone(stay.id)
   return (
     <li
       data-testid="row"
-      className={`${ui.row} ${rowAccent}`}
+      data-done={done}
+      className={`${ui.row} ${rowAccent}${done ? ' opacity-70' : ''}`}
       style={cssVars({ '--cc': CITY_COLOR[stay.cityId] })}
     >
       <div>
-        <h3 className={ui.rowTitle}>Madrid: apartamento privado</h3>
+        <h3 className={`${ui.rowTitle}${done ? ' line-through decoration-muted' : ''}`}>
+          Madrid: apartamento privado
+        </h3>
         <div className={ui.meta}>
           {stay.checkIn} a {stay.checkOut} nov · {n} noches · {stay.guests} personas
         </div>
@@ -83,7 +91,7 @@ function ApartmentRow({ stay }: { stay: Stay }) {
         <PasteBox itemKey={stay.id} />
         <RealFields itemKey={stay.id} />
       </div>
-      <StatusButton itemKey={stay.id} />
+      <RowActions itemKey={stay.id} doneLabel={`Estancia: ${stay.name}`} />
     </li>
   )
 }

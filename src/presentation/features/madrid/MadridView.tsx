@@ -25,7 +25,7 @@ export function MadridView() {
       <h2 className={ui.subH}>Plan del 21 al 26 de noviembre</h2>
       <ol className={ui.list}>
         {days.map((d) => (
-          <DayCard key={d.day} day={d} />
+          <DayCard key={d.day} day={d} scope="mad" />
         ))}
       </ol>
 

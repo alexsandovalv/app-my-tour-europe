@@ -199,3 +199,17 @@ describe('store de Zustand: pagos, fechas, gastos y presupuesto', () => {
     assert.equal(store.getState().booking.budget.total, null)
   })
 })
+
+describe('store de Zustand: hecho', () => {
+  it('marca y desmarca una o varias, y lo persiste', () => {
+    const { store, bookings } = setup({ now: 70 })
+    store.getState().setDone('e-1', true)
+    store.getState().setDoneMany(['t-1', 't-2'], true)
+    assert.deepEqual(Object.keys(store.getState().booking.done).sort(), ['e-1', 't-1', 't-2'])
+    store.getState().setDone('t-1', false)
+    store.getState().setDoneMany(['e-1', 't-2'], false)
+    assert.deepEqual(store.getState().booking.done, {})
+    assert.equal(bookings.saved.length, 4)
+    assert.equal(bookings.saved.at(-1)?.t, 70)
+  })
+})

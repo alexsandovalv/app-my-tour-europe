@@ -1,13 +1,22 @@
-import { cityLabelForDay, eventsOfDay, sleepingAt, type DayCityLabel } from '../../../domain/agenda'
+import {
+  agendaProgress,
+  cityLabelForDay,
+  dayProgress,
+  eventsOfDay,
+  sleepingAt,
+  type DayCityLabel,
+} from '../../../domain/agenda'
 import {
   dayLabel,
   novemberGrid,
   weekdayLong,
   WEEKDAY_HEADERS_MONDAY_FIRST,
 } from '../../../domain/calendar'
-import type { BookingState } from '../../../domain/booking'
+import { isDone, type BookingState } from '../../../domain/booking'
 import type { AgendaEvent, AgendaEventKind, Trip } from '../../../domain/trip'
 import { useApp, useAppStore } from '../../AppContext'
+import { DoneBox } from '../../components/BookingControls'
+import { DayDoneBar } from '../../components/DayDoneBar'
 import { CityButton } from '../../components/CityButton'
 import { colorOfCity, cssVars } from '../../theme'
 import { ui } from '../../ui'
@@ -49,20 +58,35 @@ function CityTag({ city, compact = false }: { city: DayCityLabel; compact?: bool
   )
 }
 
+function EventRow({ event: e }: { event: AgendaEvent }) {
+  const done = useAppStore((s) => (e.key ? isDone(s.booking, e.key) : false))
+  return (
+    <li
+      data-testid="event"
+      data-done={done}
+      className="grid grid-cols-[20px_52px_minmax(0,1fr)] items-baseline gap-2 max-sm:grid-cols-[20px_minmax(0,1fr)]"
+    >
+      <span className="self-start pt-0.5">
+        {e.key && <DoneBox itemKey={e.key} label={`Hecho: ${e.title}`} />}
+      </span>
+      <span className="font-mono text-[.78rem] text-muted max-sm:hidden">{e.time ?? ''}</span>
+      <span className={`font-semibold ${done ? 'text-muted line-through decoration-muted' : ''}`}>
+        <i className={`mr-[7px] inline-block size-2 rounded-full align-baseline ${DOT[e.kind]}`} />
+        {e.time && (
+          <span className="mr-1.5 font-mono text-[.78rem] font-normal sm:hidden">{e.time}</span>
+        )}
+        {e.title}
+        <span className="block text-[.85rem] font-normal text-muted no-underline">{e.note}</span>
+      </span>
+    </li>
+  )
+}
+
 function EventItems({ events }: { events: readonly AgendaEvent[] }) {
   return (
     <ul className="m-0 flex list-none flex-col gap-1.5 p-0">
       {events.map((e, i) => (
-        <li key={i} className="grid grid-cols-[52px_minmax(0,1fr)] items-baseline gap-2">
-          <span className="font-mono text-[.78rem] text-muted">{e.time ?? ''}</span>
-          <span className="font-semibold">
-            <i
-              className={`mr-[7px] inline-block size-2 rounded-full align-baseline ${DOT[e.kind]}`}
-            />
-            {e.title}
-            <span className="block text-[.85rem] font-normal text-muted">{e.note}</span>
-          </span>
-        </li>
+        <EventRow key={e.key ?? i} event={e} />
       ))}
     </ul>
   )
@@ -104,6 +128,7 @@ function MonthGrid({
         }
         const city = cityLabelForDay(trip, day)
         const events = eventsOfDay(trip, day, booking)
+        const progress = dayProgress(trip, booking, day)
         const inTrip = city.kind !== 'outside'
         const on = day === selected
         return (
@@ -116,19 +141,37 @@ function MonthGrid({
             onClick={() => onSelect(day)}
             className={`${cellBase} flex cursor-pointer flex-col gap-[3px] p-1 text-left max-sm:px-0.5 max-sm:py-[3px] ${inTrip ? 'bg-surface text-ink' : 'bg-bg text-muted'} ${on ? 'shadow-[inset_0_0_0_2px_var(--accent)]' : ''}`}
           >
-            <span className="self-end font-display text-[.95rem] font-semibold">
-              {day === 1 ? '1 nov' : day}
+            <span className="flex items-center justify-between gap-1">
+              {progress.total > 0 && progress.done === progress.total ? (
+                <span
+                  data-testid="day-complete"
+                  className="rounded-full bg-paid-bg px-1.5 text-[.65rem] font-semibold text-paid"
+                  title="Todo hecho"
+                >
+                  ✓
+                </span>
+              ) : (
+                <span />
+              )}
+              <span className="font-display text-[.95rem] font-semibold">
+                {day === 1 ? '1 nov' : day}
+              </span>
             </span>
             <CityTag city={city} compact />
-            {events.slice(0, 3).map((e, k) => (
-              <span
-                key={k}
-                className={`overflow-hidden rounded-[3px] px-1 py-px text-[.68rem] leading-[1.3] text-ellipsis whitespace-nowrap max-sm:hidden ${CHIP[e.kind]}`}
-              >
-                {e.time ? `${e.time} ` : ''}
-                {e.title}
-              </span>
-            ))}
+            {events.slice(0, 3).map((e, k) => {
+              const done = e.key ? isDone(booking, e.key) : false
+              return (
+                <span
+                  key={k}
+                  data-done={done}
+                  className={`overflow-hidden rounded-[3px] px-1 py-px text-[.68rem] leading-[1.3] text-ellipsis whitespace-nowrap max-sm:hidden ${CHIP[e.kind]}${done ? ' line-through opacity-55' : ''}`}
+                >
+                  {done ? '✓ ' : ''}
+                  {e.time ? `${e.time} ` : ''}
+                  {e.title}
+                </span>
+              )
+            })}
             {events.length > 3 && (
               <span className="text-[.62rem] text-muted max-sm:hidden">
                 +{events.length - 3} más
@@ -137,7 +180,10 @@ function MonthGrid({
             {events.length > 0 && (
               <span className="hidden flex-wrap gap-[3px] max-sm:flex">
                 {events.map((e, k) => (
-                  <i key={k} className={`size-1.5 rounded-full ${DOT[e.kind]}`} />
+                  <i
+                    key={k}
+                    className={`size-1.5 rounded-full ${DOT[e.kind]}${e.key && isDone(booking, e.key) ? ' opacity-30' : ''}`}
+                  />
                 ))}
               </span>
             )}
@@ -163,7 +209,10 @@ function DayDetail({ trip, booking, day }: { trip: Trip; booking: BookingState; 
       <CityTag city={city} />
       {sleeps && <div className={ui.meta}>Duermes en: {sleeps}</div>}
       {events.length ? (
-        <EventItems events={events} />
+        <>
+          <DayDoneBar trip={trip} day={day} scope="age" />
+          <EventItems events={events} />
+        </>
       ) : (
         <p className={ui.note}>Sin actividades este día.</p>
       )}
@@ -219,11 +268,17 @@ export function AgendaView() {
   const setView = useAppStore((s) => s.setAgendaView)
   const selected = useAppStore((s) => s.selectedDay)
   const selectDay = useAppStore((s) => s.selectDay)
+  const progress = agendaProgress(trip, booking)
 
   return (
     <section className={ui.panel} id="p-age" role="tabpanel" aria-labelledby="tab-age">
       <div className="flex flex-wrap items-center justify-between gap-x-[18px] gap-y-2.5">
-        <h2 className="text-2xl font-extrabold tracking-tight">Noviembre 2026</h2>
+        <div>
+          <h2 className="text-2xl font-extrabold tracking-tight">Noviembre 2026</h2>
+          <p className={ui.meta} id="ageProgress">
+            Hecho: {progress.done} de {progress.total} actividades
+          </p>
+        </div>
         <div className={ui.seg} role="group" aria-label="Vista de la agenda">
           <button
             type="button"

@@ -72,7 +72,15 @@ convierten al calcular, para no perder el dato original.
 Las fechas reales mueven los traslados en la agenda (`eventsOfDay`) y añaden eventos para entradas y
 check-in; el plan original no se modifica.
 
-## ADR-9: HTML único opcional
+## ADR-9: «Hecho» como claves estables dentro del mismo estado
+
+Las marcas de cumplido (`BookingState.done`) son un conjunto de claves. Una reserva usa su propio id
+(traslado, entrada, estancia) y el resto de eventos de la agenda una clave derivada del día y del título
+(`eventKeys`), de modo que un traslado marcado en la agenda es el mismo que en «Trenes y vuelos» y que una
+fecha real no lo desmarca. El progreso de un día o del mes (`dayProgress`, `agendaProgress`) se calcula
+sobre los eventos que realmente se muestran ese día.
+
+## ADR-10: HTML único opcional
 
 `npm run build:single` compila Tailwind con su API y empaqueta todo en un solo HTML con esbuild. Sirve para abrir la app sin servidor y para
 publicarla como artefacto de Claude, donde los datos compartidos usan su capacidad `db`

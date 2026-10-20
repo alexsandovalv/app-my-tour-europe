@@ -6,6 +6,7 @@ import {
   decideSync,
   removeExpense as removeExpenseFrom,
   setBudgetField,
+  setDoneMany as setDoneManyIn,
   setPaid as setPaidIn,
   setRealDate as setRealDateIn,
   setTransportMode,
@@ -62,6 +63,10 @@ interface BookingsSlice {
   addExpense(draft: ExpenseDraft): Expense | null
   updateExpense(id: string, draft: ExpenseDraft): boolean
   removeExpense(id: string): void
+  /** Marca o desmarca como hecha una actividad, reserva o punto de la lista. */
+  setDone(key: string, value: boolean): void
+  /** Marca o desmarca varias a la vez (p. ej. todas las actividades de un día). */
+  setDoneMany(keys: readonly string[], value: boolean): void
   /** Presupuesto total o tope diario en US$ (`null` vuelve al sugerido). */
   setBudget(field: keyof BudgetSettings, value: number | null): boolean
   /** Llega una versión remota: gana la más reciente. */
@@ -158,6 +163,9 @@ export function createAppStore(deps: AppStoreDeps): AppStore {
         commitBooking(next)
         return true
       },
+      setDone: (key, value) => commitBooking(setDoneManyIn(get().booking, [key], value, clock())),
+      setDoneMany: (keys, value) =>
+        commitBooking(setDoneManyIn(get().booking, keys, value, clock())),
       removeExpense: (id) => commitBooking(removeExpenseFrom(get().booking, id, clock())),
       setBudget: (field, value) => {
         const next = setBudgetField(get().booking, field, value, clock())

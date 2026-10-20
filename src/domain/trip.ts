@@ -129,6 +129,11 @@ export interface Ticket {
 export type AgendaEventKind = 'trip' | 'visit' | 'res' | 'free' | 'info'
 
 export interface AgendaEvent {
+  /**
+   * Clave estable para marcar el evento como hecho. La asigna `eventsOfDay`: el id del traslado
+   * o de la reserva cuando el evento es una reserva, y una clave derivada del día y el título si no.
+   */
+  readonly key?: string
   readonly day: number
   /** Si el evento es un traslado, su título depende del medio elegido para ese tramo. */
   readonly transferId?: string

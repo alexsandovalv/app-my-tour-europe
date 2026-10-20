@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { statusOf, type BookingStatus } from '../../domain/booking'
+import { isDone, statusOf, type BookingStatus } from '../../domain/booking'
 import { isoOfDay } from '../../domain/expenses'
 import { formatUsd, usdOf, type Currency } from '../../domain/money'
 import { useApp, useAppStore } from '../AppContext'
@@ -194,6 +194,79 @@ export function RealFields({ itemKey }: { itemKey: string }) {
       {invalid && (
         <span className="basis-full text-[.78rem] text-todo">Escribe un importe mayor que 0</span>
       )}
+    </div>
+  )
+}
+
+/** ¿Está hecha esta actividad o reserva? */
+export const useDone = (itemKey: string): boolean => useAppStore((s) => isDone(s.booking, itemKey))
+
+const CHECK_PATH = 'M5 12.5l4.5 4.5L19 7.5'
+
+function CheckMark() {
+  return (
+    <svg viewBox="0 0 24 24" className="size-3.5" aria-hidden="true" focusable="false">
+      <path
+        d={CHECK_PATH}
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="3.2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  )
+}
+
+/** Casilla pequeña para listas (agenda, checklist). Es un botón con rol de casilla de verificación. */
+export function DoneBox({ itemKey, label }: { itemKey: string; label: string }) {
+  const done = useDone(itemKey)
+  const setDone = useAppStore((s) => s.setDone)
+  return (
+    <button
+      type="button"
+      role="checkbox"
+      id={`dn-${itemKey}`}
+      aria-checked={done}
+      aria-label={label}
+      title={done ? 'Hecho: pulsa para desmarcar' : 'Marcar como hecho'}
+      className="inline-flex size-5 shrink-0 cursor-pointer items-center justify-center rounded-[5px] border-2 border-line bg-surface p-0 text-accent-ink hover:border-accent aria-checked:border-paid aria-checked:bg-paid"
+      onClick={() => setDone(itemKey, !done)}
+    >
+      {done && <CheckMark />}
+    </button>
+  )
+}
+
+/** Botón «Hecho» de una tarjeta (entrada, traslado, hospedaje). */
+export function DoneButton({ itemKey, label }: { itemKey: string; label: string }) {
+  const done = useDone(itemKey)
+  const setDone = useAppStore((s) => s.setDone)
+  return (
+    <button
+      type="button"
+      id={`done-${itemKey}`}
+      aria-pressed={done}
+      aria-label={`${label}: ${done ? 'hecho' : 'pendiente'}. Pulsa para cambiar.`}
+      className="inline-flex cursor-pointer items-center gap-1.5 rounded-full border border-line bg-surface px-2.5 py-1.5 text-[.8rem] font-semibold whitespace-nowrap text-muted hover:border-accent aria-pressed:border-paid aria-pressed:bg-paid-bg aria-pressed:text-paid"
+      onClick={() => setDone(itemKey, !done)}
+    >
+      <span
+        className={`inline-flex size-4 items-center justify-center rounded-[4px] border-2 ${done ? 'border-paid bg-paid text-accent-ink' : 'border-current'}`}
+      >
+        {done && <CheckMark />}
+      </span>
+      Hecho
+    </button>
+  )
+}
+
+/** Estado de la reserva y «Hecho», apilados en la columna derecha de una tarjeta. */
+export function RowActions({ itemKey, doneLabel }: { itemKey: string; doneLabel: string }) {
+  return (
+    <div className="flex flex-col items-start gap-2 max-[480px]:flex-row max-[480px]:flex-wrap">
+      <StatusButton itemKey={itemKey} />
+      <DoneButton itemKey={itemKey} label={doneLabel} />
     </div>
   )
 }
