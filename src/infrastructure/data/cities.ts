@@ -5,7 +5,6 @@ export const CITIES: Readonly<Record<CityId, City>> = {
   madrid: {
     id: 'madrid',
     name: 'Madrid',
-    country: 'es',
     subtitle: '3 a 6 nov y 21 a 26 nov',
     coordinates: {
       lon: -3.7,
@@ -71,7 +70,6 @@ export const CITIES: Readonly<Record<CityId, City>> = {
   toledo: {
     id: 'toledo',
     name: 'Toledo',
-    country: 'es',
     subtitle: 'Excursión del jueves 5 nov desde Madrid',
     coordinates: {
       lon: -4.02,
@@ -111,7 +109,6 @@ export const CITIES: Readonly<Record<CityId, City>> = {
   santiago: {
     id: 'santiago',
     name: 'Santiago de Compostela',
-    country: 'es',
     subtitle: 'Excursión del sábado 7 nov desde Vigo · tren de 1 h 10 min aprox.',
     coordinates: {
       lon: -8.54,
@@ -145,7 +142,6 @@ export const CITIES: Readonly<Record<CityId, City>> = {
   vigo: {
     id: 'vigo',
     name: 'Vigo',
-    country: 'es',
     subtitle: '6 a 9 nov · 3 noches',
     coordinates: {
       lon: -8.72,
@@ -191,7 +187,6 @@ export const CITIES: Readonly<Record<CityId, City>> = {
   porto: {
     id: 'porto',
     name: 'Porto',
-    country: 'pt',
     subtitle: '9 a 12 nov · 3 noches',
     coordinates: {
       lon: -8.61,
@@ -237,7 +232,6 @@ export const CITIES: Readonly<Record<CityId, City>> = {
   guimaraes: {
     id: 'guimaraes',
     name: 'Guimarães o Aveiro',
-    country: 'pt',
     subtitle: 'Excursión del miércoles 11 nov desde Porto · elige una',
     coordinates: {
       lon: -8.3,
@@ -269,7 +263,6 @@ export const CITIES: Readonly<Record<CityId, City>> = {
   roma: {
     id: 'roma',
     name: 'Roma',
-    country: 'it',
     subtitle: '12 a 14 nov · 2 noches',
     coordinates: {
       lon: 12.5,
@@ -315,7 +308,6 @@ export const CITIES: Readonly<Record<CityId, City>> = {
   florencia: {
     id: 'florencia',
     name: 'Florencia',
-    country: 'it',
     subtitle: '14 a 16 nov · 2 noches',
     coordinates: {
       lon: 11.26,
@@ -359,7 +351,6 @@ export const CITIES: Readonly<Record<CityId, City>> = {
   barcelona: {
     id: 'barcelona',
     name: 'Barcelona',
-    country: 'es',
     subtitle: '16 a 19 nov · 3 noches',
     coordinates: {
       lon: 2.17,
@@ -406,7 +397,6 @@ export const CITIES: Readonly<Record<CityId, City>> = {
   paris: {
     id: 'paris',
     name: 'París',
-    country: 'fr',
     subtitle: '19 a 21 nov · 2 noches',
     coordinates: {
       lon: 2.35,
@@ -458,7 +448,6 @@ export const CITIES: Readonly<Record<CityId, City>> = {
   segovia: {
     id: 'segovia',
     name: 'Segovia',
-    country: 'es',
     subtitle: 'Excursión del martes 24 nov desde Madrid',
     coordinates: {
       lon: -4.12,
@@ -490,7 +479,6 @@ export const CITIES: Readonly<Record<CityId, City>> = {
   saopaulo: {
     id: 'saopaulo',
     name: 'São Paulo',
-    country: 'br',
     subtitle: 'Escala: llegas el 26 nov a las 20:35 y sales el 27 a las 6:30',
     coordinates: {
       lon: -46.63,

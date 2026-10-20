@@ -1,14 +1,23 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
-import { createApp } from '../composition'
 import { App } from './App'
-import './styles/app.css'
+import { AppContext, type AppServices } from './AppContext'
+import { applyTheme, systemPrefersDark } from './state/theme'
+import './styles/index.css'
 
-const container = document.getElementById('root')
-if (!container) throw new Error('No se encontró #root')
+/** Monta la aplicación. Recibe lo ya compuesto: no conoce las implementaciones de infraestructura. */
+export function mount(services: AppServices): void {
+  const container = document.getElementById('root')
+  if (!container) throw new Error('No se encontró #root')
 
-createRoot(container).render(
-  <StrictMode>
-    <App composition={createApp()} />
-  </StrictMode>,
-)
+  // Antes del primer pintado, para que no parpadee entre claro y oscuro.
+  applyTheme(services.store.getState().theme, systemPrefersDark())
+
+  createRoot(container).render(
+    <StrictMode>
+      <AppContext.Provider value={services}>
+        <App />
+      </AppContext.Provider>
+    </StrictMode>,
+  )
+}

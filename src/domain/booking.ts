@@ -1,15 +1,20 @@
-/** Estado de las reservas del usuario: estado de cada ítem y el enlace de su reserva. */
+import { isTransportMode } from './transport'
+import type { TransportMode } from './trip'
+
+/** Estado de las reservas del usuario: estado de cada ítem, el enlace de su reserva y el medio usado. */
 export const BOOKING_STATUSES = ['Por reservar', 'Reservado', 'Pagado'] as const
 export type BookingStatus = (typeof BOOKING_STATUSES)[number]
 
 export interface BookingState {
   readonly estado: Readonly<Record<string, BookingStatus>>
   readonly links: Readonly<Record<string, string>>
+  /** Medio de transporte realmente usado en cada tramo (solo los que difieren del plan o se confirmaron). */
+  readonly modes: Readonly<Record<string, TransportMode>>
   /** Marca de tiempo (ms) de la última modificación local; sirve para resolver conflictos. */
   readonly t: number
 }
 
-export const EMPTY_BOOKING_STATE: BookingState = { estado: {}, links: {}, t: 0 }
+export const EMPTY_BOOKING_STATE: BookingState = { estado: {}, links: {}, modes: {}, t: 0 }
 
 export function statusOf(state: BookingState, key: string): BookingStatus {
   return state.estado[key] ?? 'Por reservar'
@@ -34,18 +39,31 @@ export function sanitizeBookingState(raw: unknown): BookingState {
   const obj = raw as Record<string, unknown>
   const estado: Record<string, BookingStatus> = {}
   const links: Record<string, string> = {}
+  const modes: Record<string, TransportMode> = {}
   if (typeof obj.estado === 'object' && obj.estado !== null) {
     for (const [k, v] of Object.entries(obj.estado)) if (isStatus(v)) estado[k] = v
   }
   if (typeof obj.links === 'object' && obj.links !== null) {
     for (const [k, v] of Object.entries(obj.links)) if (isValidBookingUrl(v)) links[k] = v
   }
+  if (typeof obj.modes === 'object' && obj.modes !== null) {
+    for (const [k, v] of Object.entries(obj.modes)) if (isTransportMode(v)) modes[k] = v
+  }
   const t = typeof obj.t === 'number' && Number.isFinite(obj.t) ? obj.t : 0
-  return { estado, links, t }
+  return { estado, links, modes, t }
 }
 
 export function cycleStatus(state: BookingState, key: string, now: number): BookingState {
   return { ...state, estado: { ...state.estado, [key]: nextStatus(statusOf(state, key)) }, t: now }
+}
+
+export function setTransportMode(
+  state: BookingState,
+  key: string,
+  mode: TransportMode,
+  now: number,
+): BookingState {
+  return { ...state, modes: { ...state.modes, [key]: mode }, t: now }
 }
 
 export type LinkResult =
@@ -83,7 +101,10 @@ export type SyncDecision = 'adopt-remote' | 'push-local' | 'none'
  */
 export function decideSync(local: BookingState, remote: BookingState | null): SyncDecision {
   const hasLocal =
-    local.t > 0 || Object.keys(local.estado).length > 0 || Object.keys(local.links).length > 0
+    local.t > 0 ||
+    Object.keys(local.estado).length > 0 ||
+    Object.keys(local.links).length > 0 ||
+    Object.keys(local.modes).length > 0
   if (!remote || remote.t === 0) return hasLocal ? 'push-local' : 'none'
   if (remote.t > local.t) return 'adopt-remote'
   if (remote.t < local.t) return 'push-local'

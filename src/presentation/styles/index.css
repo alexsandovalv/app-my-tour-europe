@@ -1,0 +1,161 @@
+@import 'tailwindcss';
+
+/* Modo oscuro por clase en <html>: lo controla el store (claro, oscuro o sistema). */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/*
+ * Tokens del tema. Tailwind los expone como utilidades (bg-surface, text-muted, fill-land…)
+ * pero leen variables CSS, por eso cambian en vivo con el modo y el acento.
+ */
+@theme inline {
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-ink: var(--ink);
+  --color-muted: var(--muted);
+  --color-line: var(--line);
+  --color-accent: var(--accent);
+  --color-accent-ink: var(--accent-ink);
+  --color-soft: var(--soft);
+  --color-todo: var(--st-todo);
+  --color-todo-bg: var(--st-todo-bg);
+  --color-res: var(--st-res);
+  --color-res-bg: var(--st-res-bg);
+  --color-paid: var(--st-paid);
+  --color-paid-bg: var(--st-paid-bg);
+  --color-sea: var(--sea);
+  --color-land: var(--land);
+  --color-landline: var(--landline);
+  --font-display: 'Bricolage Grotesque', 'Trebuchet MS', sans-serif;
+  --font-body: 'Instrument Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, Menlo, Consolas, monospace;
+}
+
+/* Claro (por defecto) */
+:root {
+  --bg: #f2f4f1;
+  --surface: #ffffff;
+  --ink: #16201d;
+  --muted: #5a6762;
+  --line: #d8ded9;
+  --accent: #0b6b58;
+  --accent-ink: #ffffff;
+  --soft: #e3efea;
+  --st-todo: #b4560a;
+  --st-todo-bg: #fbebd9;
+  --st-res: #1e5fa8;
+  --st-res-bg: #e1ecf8;
+  --st-paid: #14703f;
+  --st-paid-bg: #ddf1e4;
+  --sea: #dde9ec;
+  --land: #f7f8f5;
+  --landline: #b3c0ba;
+  --scrim: rgb(8 14 12 / 0.6);
+  --city-madrid: #c8472b;
+  --city-vigo: #0f8b8d;
+  --city-porto: #2f8f5b;
+  --city-roma: #8a5bb5;
+  --city-florencia: #d1478c;
+  --city-barcelona: #b57a00;
+  --city-paris: #2d6db5;
+  --city-saopaulo: #7a6a1f;
+  --city-home: #6b7a74;
+}
+
+/* Oscuro */
+:root.dark {
+  --bg: #101614;
+  --surface: #18211e;
+  --ink: #e8eeeb;
+  --muted: #9aa9a3;
+  --line: #2b3833;
+  --accent: #4fc2a6;
+  --accent-ink: #06211b;
+  --soft: #1b2c27;
+  --st-todo: #f0a25e;
+  --st-todo-bg: #3a2813;
+  --st-res: #8db9ee;
+  --st-res-bg: #1b2d44;
+  --st-paid: #6fd39a;
+  --st-paid-bg: #17341f;
+  --sea: #0d1a1e;
+  --land: #1c2925;
+  --landline: #36473f;
+  --scrim: rgb(0 0 0 / 0.7);
+  --city-madrid: #e8745a;
+  --city-vigo: #4fc9cb;
+  --city-porto: #5cc389;
+  --city-roma: #b98be0;
+  --city-florencia: #ee8ab9;
+  --city-barcelona: #e8b53a;
+  --city-paris: #6fa3e3;
+  --city-saopaulo: #ddbb55;
+  --city-home: #9aa9a3;
+}
+
+/* Acentos seleccionables (claro) */
+:root[data-accent='azul'] {
+  --accent: #1d5fb4;
+  --accent-ink: #ffffff;
+  --soft: #e1ecf8;
+}
+:root[data-accent='violeta'] {
+  --accent: #6d3fb0;
+  --accent-ink: #ffffff;
+  --soft: #ece4f7;
+}
+:root[data-accent='terracota'] {
+  --accent: #b4482a;
+  --accent-ink: #ffffff;
+  --soft: #f8e6df;
+}
+/* Acentos seleccionables (oscuro) */
+:root.dark[data-accent='azul'] {
+  --accent: #7fb0f0;
+  --accent-ink: #07203f;
+  --soft: #1a2b44;
+}
+:root.dark[data-accent='violeta'] {
+  --accent: #b79bea;
+  --accent-ink: #1e0f3a;
+  --soft: #2a2040;
+}
+:root.dark[data-accent='terracota'] {
+  --accent: #ee8b6e;
+  --accent-ink: #3a1208;
+  --soft: #3a2219;
+}
+
+@layer base {
+  body {
+    @apply bg-bg px-4 font-body text-[15px] leading-normal text-ink;
+  }
+  a {
+    @apply text-accent underline-offset-[3px];
+  }
+  a:focus-visible,
+  button:focus-visible,
+  input:focus-visible {
+    @apply outline-2 outline-offset-2 outline-accent;
+  }
+  h1,
+  h2,
+  h3 {
+    @apply m-0 font-display text-balance;
+  }
+  [hidden] {
+    display: none !important;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    * {
+      scroll-behavior: auto !important;
+      transition: none !important;
+    }
+  }
+}
+
+@utility scrollbar-none {
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}

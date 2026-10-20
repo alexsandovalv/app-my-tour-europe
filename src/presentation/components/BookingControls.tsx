@@ -1,18 +1,24 @@
 import { useState } from 'react'
-import { statusOf } from '../../domain/booking'
-import { useApp, useBookingState } from '../AppContext'
+import { statusOf, type BookingStatus } from '../../domain/booking'
+import { useAppStore } from '../AppContext'
+
+const STATUS_STYLE: Record<BookingStatus, string> = {
+  'Por reservar': 'bg-todo-bg text-todo',
+  Reservado: 'bg-res-bg text-res',
+  Pagado: 'bg-paid-bg text-paid',
+}
 
 export function StatusButton({ itemKey }: { itemKey: string }) {
-  const { bookings } = useApp()
-  const status = statusOf(useBookingState(), itemKey)
+  const status = useAppStore((s) => statusOf(s.booking, itemKey))
+  const cycleStatus = useAppStore((s) => s.cycleStatus)
   return (
     <button
       type="button"
-      className="sel"
       id={`sel-${itemKey}`}
       data-s={status}
       aria-label={`Estado de la reserva: ${status}. Pulsa para cambiar.`}
-      onClick={() => bookings.cycleStatus(itemKey)}
+      className={`cursor-pointer justify-self-start whitespace-nowrap rounded-full border-0 px-2.5 py-1.5 text-[.8rem] font-semibold ${STATUS_STYLE[status]}`}
+      onClick={() => cycleStatus(itemKey)}
     >
       {status}
     </button>
@@ -21,13 +27,14 @@ export function StatusButton({ itemKey }: { itemKey: string }) {
 
 /** Campo para pegar el enlace de la reserva propia; valida y guarda al salir o al pegar. */
 export function PasteBox({ itemKey }: { itemKey: string }) {
-  const { bookings } = useApp()
-  const saved = useBookingState().links[itemKey] ?? ''
+  const saved = useAppStore((s) => s.booking.links[itemKey] ?? '')
+  const setLink = useAppStore((s) => s.setLink)
+  const clearLink = useAppStore((s) => s.clearLink)
   const [draft, setDraft] = useState<string | null>(null)
   const [invalid, setInvalid] = useState(false)
 
   const commit = (raw: string) => {
-    if (bookings.setLink(itemKey, raw)) {
+    if (setLink(itemKey, raw)) {
       setDraft(null)
       setInvalid(false)
     } else {
@@ -36,15 +43,15 @@ export function PasteBox({ itemKey }: { itemKey: string }) {
   }
 
   return (
-    <div className="paste">
+    <div className="mt-2.5 flex flex-wrap items-center gap-x-2.5 gap-y-1.5">
       <input
-        className="lnk"
         type="url"
         id={`lnk-${itemKey}`}
         inputMode="url"
         autoComplete="off"
         placeholder="Pega aquí el link de tu reserva"
         aria-label="Link de tu reserva"
+        className="min-w-0 flex-[1_1_220px] rounded-md border border-line bg-bg px-2.5 py-[7px] text-[.85rem] text-ink placeholder:text-muted"
         value={draft ?? saved}
         onChange={(e) => setDraft(e.target.value)}
         onPaste={(e) => {
@@ -59,18 +66,24 @@ export function PasteBox({ itemKey }: { itemKey: string }) {
         }}
       />
       {saved && (
-        <a className="open" id={`open-${itemKey}`} href={saved} target="_blank" rel="noopener">
+        <a
+          id={`open-${itemKey}`}
+          href={saved}
+          target="_blank"
+          rel="noopener"
+          className="text-[.85rem] font-semibold whitespace-nowrap"
+        >
           Abrir mi reserva
         </a>
       )}
       {saved && (
         <button
           type="button"
-          className="clr"
           id={`clr-${itemKey}`}
           aria-label="Quitar link"
+          className="cursor-pointer border-0 bg-transparent px-1.5 py-0.5 text-xl leading-none text-muted"
           onClick={() => {
-            bookings.clearLink(itemKey)
+            clearLink(itemKey)
             setDraft(null)
             setInvalid(false)
           }}
@@ -78,7 +91,11 @@ export function PasteBox({ itemKey }: { itemKey: string }) {
           &times;
         </button>
       )}
-      {invalid && <span className="err">Pega un link completo, que empiece con https://</span>}
+      {invalid && (
+        <span className="basis-full text-[.78rem] text-todo">
+          Pega un link completo, que empiece con https://
+        </span>
+      )}
     </div>
   )
 }

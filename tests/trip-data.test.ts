@@ -5,6 +5,8 @@ import { novemberGrid } from '../src/domain/calendar'
 import { airbnbSearchUrl, bookingSearchUrl } from '../src/domain/links'
 import { budgetTotal, nightsOf, summarizeLodging, summarizeTransport } from '../src/domain/summary'
 import { loadTrip } from '../src/application/loadTrip'
+import { EMPTY_BOOKING_STATE, setTransportMode, type BookingState } from '../src/domain/booking'
+import { modeOf } from '../src/domain/transport'
 import { TRIP, staticTripSource } from '../src/infrastructure/data/tripData'
 import { staticRateProvider } from '../src/infrastructure/fx/ecbRate'
 
@@ -155,5 +157,51 @@ describe('enlaces de reserva', () => {
       airbnbSearchUrl(apt, 'Chamberí'),
       /Chamber%C3%AD--Madrid.*checkin=2026-11-21&checkout=2026-11-26&adults=2/,
     )
+  })
+})
+
+describe('traslados y medio de transporte', () => {
+  const legs = TRIP.transfers.filter((t) => !t.excursion)
+
+  it('los tramos entre ciudades forman una cadena continua Madrid → … → Madrid', () => {
+    assert.equal(legs[0]?.from, 'madrid')
+    assert.equal(legs.at(-1)?.to, 'madrid')
+    legs.slice(1).forEach((leg, i) => assert.equal(leg.from, legs[i]?.to, leg.id))
+    assert.equal(legs.length, 7)
+  })
+
+  it('cada tramo apunta a ciudades que existen y tiene un medio previsto', () => {
+    for (const t of TRIP.transfers) {
+      assert.ok(TRIP.cities[t.from] && TRIP.cities[t.to], t.id)
+      assert.ok(['air', 'train', 'bus'].includes(t.defaultMode), t.id)
+    }
+  })
+
+  it('el título del evento de traslado sigue al medio elegido', () => {
+    const base = EMPTY_BOOKING_STATE
+    const day6 = (s: BookingState) =>
+      eventsOfDay(TRIP, 6, s).find((e) => e.transferId === 't-1')?.title
+    assert.equal(day6(base), 'Tren a Vigo')
+    assert.equal(day6(setTransportMode(base, 't-1', 'air', 1)), 'Avión a Vigo')
+    assert.equal(day6(setTransportMode(base, 't-1', 'bus', 1)), 'Bus a Vigo')
+    const day12 = (s: BookingState) =>
+      eventsOfDay(TRIP, 12, s).find((e) => e.transferId === 't-4')?.title
+    assert.equal(day12(base), 'Avión a Roma')
+    assert.equal(day12(setTransportMode(base, 't-4', 'train', 1)), 'Tren a Roma')
+  })
+
+  it('modeOf usa lo registrado y, si no, lo previsto', () => {
+    const t1 = TRIP.transfers.find((t) => t.id === 't-1')!
+    assert.equal(modeOf(EMPTY_BOOKING_STATE, t1), 'train')
+    assert.equal(modeOf(setTransportMode(EMPTY_BOOKING_STATE, 't-1', 'air', 1), t1), 'air')
+  })
+
+  it('los eventos enlazados a un traslado referencian tramos reales', () => {
+    for (const e of TRIP.agenda.filter((x) => x.transferId)) {
+      assert.ok(
+        TRIP.transfers.some((t) => t.id === e.transferId),
+        e.title,
+      )
+    }
   })
 })

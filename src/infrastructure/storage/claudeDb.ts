@@ -67,7 +67,7 @@ export class ClaudeDbSync {
     }
     this.writing = true
     this.doc
-      .set({ estado: state.estado, links: state.links, t: state.t })
+      .set({ estado: state.estado, links: state.links, modes: state.modes, t: state.t })
       .catch(() => undefined)
       .then(() => {
         this.writing = false

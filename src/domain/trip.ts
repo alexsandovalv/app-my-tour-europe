@@ -4,8 +4,6 @@
  */
 import type { PriceRange } from './money'
 
-export type CountryCode = 'es' | 'pt' | 'it' | 'fr' | 'br' | 'pe'
-
 export type CityId =
   | 'madrid'
   | 'toledo'
@@ -53,7 +51,6 @@ export interface Place {
 export interface City {
   readonly id: CityId
   readonly name: string
-  readonly country: CountryCode
   readonly subtitle: string
   readonly coordinates: Coordinates
   readonly places: readonly Place[]
@@ -66,7 +63,6 @@ export interface DayPlan {
   readonly cityLabel: string
   /** Ciudad cuyo carrusel de lugares abre el día. */
   readonly cityId: CityId
-  readonly country: CountryCode
   readonly kind: 'stay' | 'travel' | 'excursion'
   readonly plan: string
   /** Qué hay que reservar para ese día (vacío si nada). */
@@ -79,7 +75,6 @@ export interface Stay {
   readonly id: string
   readonly name: string
   readonly cityId: CityId
-  readonly country: CountryCode
   readonly kind: LodgingKind
   /** Día de entrada y de salida (la salida no cuenta como noche). */
   readonly checkIn: number
@@ -101,8 +96,14 @@ export interface Link {
   readonly url: string
 }
 
+export type TransportMode = 'air' | 'train' | 'bus'
+
 export interface Transfer {
   readonly id: string
+  readonly from: CityId
+  readonly to: CityId
+  /** Medio previsto en el plan; el usuario puede cambiarlo después de viajar. */
+  readonly defaultMode: TransportMode
   readonly dateLabel: string
   readonly title: string
   readonly description: string
@@ -129,6 +130,8 @@ export type AgendaEventKind = 'trip' | 'visit' | 'res' | 'free' | 'info'
 
 export interface AgendaEvent {
   readonly day: number
+  /** Si el evento es un traslado, su título depende del medio elegido para ese tramo. */
+  readonly transferId?: string
   readonly time?: string
   readonly title: string
   readonly note: string
@@ -192,7 +195,7 @@ export interface Guides {
 
 export interface Trip {
   readonly title: string
-  readonly home: { readonly label: string; readonly country: CountryCode }
+  readonly home: { readonly label: string }
   /** Primer y último día del itinerario detallado. */
   readonly firstDay: number
   readonly lastDay: number

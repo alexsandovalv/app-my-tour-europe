@@ -24,6 +24,7 @@ export const AGENDA: readonly AgendaEvent[] = [
   },
   {
     day: 6,
+    transferId: 't-1',
     title: 'Tren a Vigo',
     kind: 'trip',
     note: 'Mañana en el Retiro; tarde en el Casco Vello, ostras y cena con tu amiga',
@@ -42,6 +43,7 @@ export const AGENDA: readonly AgendaEvent[] = [
   },
   {
     day: 9,
+    transferId: 't-3',
     title: 'Bus a Porto',
     kind: 'trip',
     note: 'Ribeira, puente Dom Luís I y atardecer en Gaia',
@@ -50,6 +52,7 @@ export const AGENDA: readonly AgendaEvent[] = [
   { day: 11, title: 'Guimarães o Aveiro', kind: 'visit', note: 'Excursión en tren de 1 h aprox.' },
   {
     day: 12,
+    transferId: 't-4',
     title: 'Vuelo a Roma',
     kind: 'trip',
     note: 'Tarde: Panteón, Fontana de Trevi y Piazza Navona',
@@ -62,6 +65,7 @@ export const AGENDA: readonly AgendaEvent[] = [
   },
   {
     day: 14,
+    transferId: 't-5',
     title: 'Tren a Florencia',
     kind: 'trip',
     note: 'Vaticano opcional a primera hora; Duomo, Ponte Vecchio y Piazzale Michelangelo',
@@ -74,6 +78,7 @@ export const AGENDA: readonly AgendaEvent[] = [
   },
   {
     day: 16,
+    transferId: 't-6',
     title: 'Vuelo a Barcelona',
     kind: 'trip',
     note: 'Tarde de llegada y paseo por el Born',
@@ -90,7 +95,13 @@ export const AGENDA: readonly AgendaEvent[] = [
     kind: 'res',
     note: 'Parc Güell o Búnkeres del Carmel; Gràcia de noche',
   },
-  { day: 19, title: 'Vuelo a París', kind: 'trip', note: 'Tarde en Montmartre y Sacré-Cœur' },
+  {
+    day: 19,
+    transferId: 't-7',
+    title: 'Vuelo a París',
+    kind: 'trip',
+    note: 'Tarde en Montmartre y Sacré-Cœur',
+  },
   {
     day: 20,
     title: 'Louvre u Orsay',
@@ -99,6 +110,7 @@ export const AGENDA: readonly AgendaEvent[] = [
   },
   {
     day: 21,
+    transferId: 't-8',
     title: 'Vuelo a Madrid',
     kind: 'trip',
     note: 'Que aterrice antes de las 12:45; maletas en el apartamento',

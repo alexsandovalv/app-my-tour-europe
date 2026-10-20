@@ -35,8 +35,34 @@ cotización no toca ni las pantallas ni los datos.
 El núcleo es TypeScript puro, así que el ejecutor nativo de Node basta y evita otra dependencia. Las pruebas de
 interfaz se hicieron con Playwright contra el build empaquetado; no se incluyen en el repositorio.
 
-## ADR-5: HTML único opcional
+## ADR-5: Zustand para el estado de la interfaz
 
-`npm run build:single` empaqueta todo en un solo HTML con esbuild. Sirve para abrir la app sin servidor y para
+**Contexto.** Las pestañas, la ciudad abierta, el tema y las reservas (con medio de transporte y enlaces)
+se comparten entre muchas pantallas y deben persistir.
+
+**Decisión.** Un único store de Zustand creado con `createStore` (versión _vanilla_) y unido a React con
+`useStore` a través de un contexto. Va en `presentation/state`: es estado de interfaz, no regla de negocio.
+Las reglas siguen en `domain` y la persistencia entra por puertos, así que el store se prueba sin DOM.
+Frente a Redux, hay mucho menos código; frente a Context + `useReducer`, los componentes se suscriben solo
+a la porción que leen (`useAppStore(selector)`) y no se vuelven a pintar por cambios ajenos.
+
+## ADR-6: Tailwind CSS v4 con tema por variables
+
+**Decisión.** Tailwind v4 con `@theme inline` apuntando a variables CSS. Cambiar de tema no recompila nada:
+solo cambia el valor de las variables (`html.dark`, `html[data-accent]`). Esto permite el modo día/noche y
+acentos modificables en tiempo de ejecución, y que el color de cada ciudad (flechas del mapa, etiquetas de la
+agenda) tenga su variante clara y oscura con contraste suficiente. Se evitó duplicar clases `dark:` en cada
+componente: casi todo usa los tokens semánticos.
+
+## ADR-7: Medio de transporte como dato del usuario
+
+Cada tramo tiene un medio por defecto (`defaultMode`) en los datos y el usuario puede registrar el que usó
+realmente (`BookingState.modes`). `modeOf(state, transfer)` resuelve el medio efectivo, y de ahí sale lo que
+muestran el mapa (estilo de trazo), la agenda («Tren a Vigo» / «Avión a Vigo») y la pestaña de transporte.
+El plan original se conserva visible para poder compararlo.
+
+## ADR-8: HTML único opcional
+
+`npm run build:single` compila Tailwind con su API y empaqueta todo en un solo HTML con esbuild. Sirve para abrir la app sin servidor y para
 publicarla como artefacto de Claude, donde los datos compartidos usan su capacidad `db`
 (`infrastructure/storage/claudeDb.ts`), que queda inactiva fuera de ese entorno.

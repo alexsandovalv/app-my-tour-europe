@@ -1,5 +1,6 @@
 import type { ExchangeRate } from '../domain/money'
 import type { BookingState } from '../domain/booking'
+import type { ThemePrefs } from '../domain/preferences'
 import type { Trip } from '../domain/trip'
 
 /** Fuente de los datos del viaje. Los importes llegan en euros, como los publica cada proveedor. */
@@ -21,4 +22,10 @@ export interface BookingStore {
    * Devuelve la función para cancelar la suscripción.
    */
   subscribe(onRemoteChange: (state: BookingState) => void): () => void
+}
+
+/** Persistencia de las preferencias de tema. */
+export interface PreferencesStore {
+  load(): ThemePrefs | null
+  save(prefs: ThemePrefs): void
 }

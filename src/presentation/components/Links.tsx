@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
 import type { Link } from '../../domain/trip'
+import { ui } from '../ui'
 
 export function ExtLink({ href, children }: { href: string; children: ReactNode }) {
   return (
@@ -20,3 +21,5 @@ export function LinkList({ links }: { links: readonly Link[] }) {
     </>
   )
 }
+
+export const linkClass = ui.link

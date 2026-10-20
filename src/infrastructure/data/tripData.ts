@@ -17,7 +17,7 @@ const SHARED_FLIGHTS: Trip['sharedFlights'] = [
 
 export const TRIP: Trip = {
   title: 'Ruta Europa, 3 al 27 de noviembre',
-  home: { label: 'Lima', country: 'pe' },
+  home: { label: 'Lima' },
   firstDay: 3,
   lastDay: 27,
   cities: CITIES,

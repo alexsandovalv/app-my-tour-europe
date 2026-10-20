@@ -1,14 +1,13 @@
-import { createContext, useContext, useSyncExternalStore } from 'react'
-import type { BookingService } from '../application/bookingService'
-import type { BookingState } from '../domain/booking'
+import { createContext, useContext } from 'react'
+import { useStore } from 'zustand'
 import type { ExchangeRate } from '../domain/money'
-import type { CityId, Trip } from '../domain/trip'
+import type { Trip } from '../domain/trip'
+import type { AppState, AppStore } from './state/appStore'
 
 export interface AppServices {
   readonly trip: Trip
-  readonly bookings: BookingService
+  readonly store: AppStore
   readonly rate: ExchangeRate
-  openCity(id: CityId): void
 }
 
 export const AppContext = createContext<AppServices | null>(null)
@@ -19,7 +18,7 @@ export function useApp(): AppServices {
   return ctx
 }
 
-export function useBookingState(): BookingState {
-  const { bookings } = useApp()
-  return useSyncExternalStore(bookings.subscribe, bookings.getSnapshot)
+/** Lee una porción del store de Zustand. Usa selectores que devuelvan valores estables. */
+export function useAppStore<T>(selector: (state: AppState) => T): T {
+  return useStore(useApp().store, selector)
 }

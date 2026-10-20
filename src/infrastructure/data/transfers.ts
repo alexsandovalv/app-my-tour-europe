@@ -9,6 +9,9 @@ const ALSA = { label: 'Alsa', url: 'https://www.alsa.com' }
 export const TRANSFERS: readonly Transfer[] = [
   {
     id: 't-1',
+    from: 'madrid',
+    to: 'vigo',
+    defaultMode: 'train',
     dateLabel: 'Vie 6 nov',
     title: 'Madrid a Vigo',
     description:
@@ -28,6 +31,9 @@ export const TRANSFERS: readonly Transfer[] = [
   },
   {
     id: 't-2',
+    from: 'vigo',
+    to: 'santiago',
+    defaultMode: 'train',
     dateLabel: 'Sáb 7 nov',
     title: 'Vigo a Santiago, ida y vuelta',
     description:
@@ -40,6 +46,9 @@ export const TRANSFERS: readonly Transfer[] = [
   },
   {
     id: 't-3',
+    from: 'vigo',
+    to: 'porto',
+    defaultMode: 'bus',
     dateLabel: 'Lun 9 nov',
     title: 'Vigo a Porto',
     description:
@@ -52,6 +61,9 @@ export const TRANSFERS: readonly Transfer[] = [
   },
   {
     id: 't-4',
+    from: 'porto',
+    to: 'roma',
+    defaultMode: 'air',
     dateLabel: 'Jue 12 nov',
     title: 'Porto a Roma',
     description: 'Vuelo directo de 2 h 50 min',
@@ -71,6 +83,9 @@ export const TRANSFERS: readonly Transfer[] = [
   },
   {
     id: 't-5',
+    from: 'roma',
+    to: 'florencia',
+    defaultMode: 'train',
     dateLabel: 'Sáb 14 nov',
     title: 'Roma a Florencia',
     description: 'Tren de alta velocidad, 1 h 30 min',
@@ -85,6 +100,9 @@ export const TRANSFERS: readonly Transfer[] = [
   },
   {
     id: 't-6',
+    from: 'florencia',
+    to: 'barcelona',
+    defaultMode: 'air',
     dateLabel: 'Lun 16 nov',
     title: 'Florencia a Barcelona',
     description:
@@ -102,6 +120,9 @@ export const TRANSFERS: readonly Transfer[] = [
   },
   {
     id: 't-7',
+    from: 'barcelona',
+    to: 'paris',
+    defaultMode: 'air',
     dateLabel: 'Jue 19 nov',
     title: 'Barcelona a París',
     description: 'Vuelo de unas 2 h con Ryanair, Vueling o Transavia, o tren de más de 6 h',
@@ -122,6 +143,9 @@ export const TRANSFERS: readonly Transfer[] = [
   },
   {
     id: 't-8',
+    from: 'paris',
+    to: 'madrid',
+    defaultMode: 'air',
     dateLabel: 'Sáb 21 nov',
     title: 'París a Madrid',
     description: 'Vuelo directo de unas 2 h 05 min. Elige uno que aterrice antes de las 12:45',
@@ -141,6 +165,9 @@ export const TRANSFERS: readonly Transfer[] = [
   },
   {
     id: 't-9',
+    from: 'madrid',
+    to: 'segovia',
+    defaultMode: 'train',
     dateLabel: 'Mar 24 nov',
     title: 'Madrid a Segovia, ida y vuelta',
     description:

@@ -1,7 +1,5 @@
 import assert from 'node:assert/strict'
 import { describe, it } from 'node:test'
-import { BookingService } from '../src/application/bookingService'
-import type { BookingStore } from '../src/application/ports'
 import {
   decideSync,
   EMPTY_BOOKING_STATE,
@@ -9,6 +7,7 @@ import {
   nextStatus,
   progressOf,
   sanitizeBookingState,
+  setTransportMode,
   type BookingState,
 } from '../src/domain/booking'
 import { ClaudeDbSync } from '../src/infrastructure/storage/claudeDb'
@@ -16,21 +15,16 @@ import {
   LocalBookingCache,
   type KeyValueStorage,
 } from '../src/infrastructure/storage/localStorageStore'
+import { LocalPreferencesStore } from '../src/infrastructure/storage/localPreferencesStore'
 import { SyncedBookingStore } from '../src/infrastructure/storage/syncedBookingStore'
 
-class FakeStore implements BookingStore {
-  saved: BookingState[] = []
-  private listener: ((s: BookingState) => void) | null = null
-  constructor(private initial: BookingState = EMPTY_BOOKING_STATE) {}
-  load = () => this.initial
-  save = (s: BookingState) => void this.saved.push(s)
-  subscribe = (l: (s: BookingState) => void) => {
-    this.listener = l
-    return () => (this.listener = null)
+const memory = () => {
+  const mem = new Map<string, string>()
+  const storage: KeyValueStorage = {
+    getItem: (k) => mem.get(k) ?? null,
+    setItem: (k, v) => void mem.set(k, v),
   }
-  remote(s: BookingState) {
-    this.listener?.(s)
-  }
+  return storage
 }
 
 describe('reglas de reservas', () => {
@@ -47,18 +41,35 @@ describe('reglas de reservas', () => {
     assert.equal(isValidBookingUrl(undefined), false)
   })
 
-  it('sanea datos externos corruptos', () => {
+  it('sanea datos externos corruptos, incluido el medio de transporte', () => {
     const s = sanitizeBookingState({
       estado: { a: 'Pagado', b: 'xx' },
       links: { a: 'nope', b: 'https://x.io' },
+      modes: { 't-1': 'air', 't-2': 'cohete' },
       t: 'z',
     })
-    assert.deepEqual(s, { estado: { a: 'Pagado' }, links: { b: 'https://x.io' }, t: 0 })
+    assert.deepEqual(s, {
+      estado: { a: 'Pagado' },
+      links: { b: 'https://x.io' },
+      modes: { 't-1': 'air' },
+      t: 0,
+    })
     assert.deepEqual(sanitizeBookingState(null), EMPTY_BOOKING_STATE)
+    // datos guardados antes de existir `modes` siguen siendo válidos
+    assert.deepEqual(
+      sanitizeBookingState({ estado: { a: 'Reservado' }, links: {}, t: 3 }).modes,
+      {},
+    )
+  })
+
+  it('registra el medio usado sin tocar lo demás', () => {
+    const s = setTransportMode(EMPTY_BOOKING_STATE, 't-3', 'train', 9)
+    assert.deepEqual(s.modes, { 't-3': 'train' })
+    assert.equal(s.t, 9)
   })
 
   it('gana la versión más reciente', () => {
-    const a: BookingState = { estado: {}, links: {}, t: 10 }
+    const a: BookingState = { estado: {}, links: {}, modes: {}, t: 10 }
     assert.equal(decideSync(a, { ...a, t: 20 }), 'adopt-remote')
     assert.equal(decideSync(a, { ...a, t: 5 }), 'push-local')
     assert.equal(decideSync(a, { ...a }), 'none')
@@ -67,42 +78,13 @@ describe('reglas de reservas', () => {
   })
 
   it('cuenta el progreso solo sobre las claves vigentes', () => {
-    const s: BookingState = { estado: { a: 'Reservado', viejo: 'Pagado' }, links: {}, t: 1 }
+    const s: BookingState = {
+      estado: { a: 'Reservado', viejo: 'Pagado' },
+      links: {},
+      modes: {},
+      t: 1,
+    }
     assert.deepEqual(progressOf(s, ['a', 'b']), { done: 1, total: 2 })
-  })
-})
-
-describe('BookingService', () => {
-  it('cambia estado, guarda y notifica', () => {
-    const store = new FakeStore()
-    const svc = new BookingService(store, () => 100)
-    let calls = 0
-    svc.subscribe(() => calls++)
-    svc.cycleStatus('t-1')
-    assert.equal(svc.getSnapshot().estado['t-1'], 'Reservado')
-    assert.equal(svc.getSnapshot().t, 100)
-    assert.equal(store.saved.length, 1)
-    assert.equal(calls, 1)
-  })
-
-  it('rechaza enlaces inválidos y permite borrarlos', () => {
-    const svc = new BookingService(new FakeStore(), () => 1)
-    assert.equal(svc.setLink('t-1', 'hola'), false)
-    assert.equal(svc.setLink('t-1', ' https://renfe.com/r/1 '), true)
-    assert.equal(svc.getSnapshot().links['t-1'], 'https://renfe.com/r/1')
-    svc.clearLink('t-1')
-    assert.equal('t-1' in svc.getSnapshot().links, false)
-  })
-
-  it('adopta un remoto más nuevo y conserva lo local si es más nuevo', () => {
-    const store = new FakeStore({ estado: { a: 'Reservado' }, links: {}, t: 50 })
-    const svc = new BookingService(store, () => 60)
-    store.remote({ estado: { a: 'Pagado' }, links: {}, t: 40 })
-    assert.equal(svc.getSnapshot().estado.a, 'Reservado')
-    assert.equal(store.saved.at(-1)?.t, 50) // reenvía lo local
-    store.remote({ estado: { a: 'Pagado' }, links: {}, t: 70 })
-    assert.equal(svc.getSnapshot().estado.a, 'Pagado')
-    assert.equal(store.saved.at(-1)?.t, 70) // lo adoptado queda guardado en local
   })
 })
 
@@ -120,17 +102,27 @@ describe('almacenamiento', () => {
     assert.deepEqual(cache.load(), EMPTY_BOOKING_STATE)
     assert.doesNotThrow(() => cache.save(EMPTY_BOOKING_STATE))
     assert.deepEqual(new LocalBookingCache(null).load(), EMPTY_BOOKING_STATE)
+    assert.equal(new LocalPreferencesStore(broken).load(), null)
+    assert.doesNotThrow(() =>
+      new LocalPreferencesStore(broken).save({ mode: 'dark', accent: 'azul' }),
+    )
   })
 
-  it('guarda y recupera', () => {
-    const mem = new Map<string, string>()
-    const cache = new LocalBookingCache({
-      getItem: (k) => mem.get(k) ?? null,
-      setItem: (k, v) => void mem.set(k, v),
-    })
-    const s: BookingState = { estado: { x: 'Pagado' }, links: { x: 'https://a.io' }, t: 9 }
+  it('guarda y recupera reservas y tema', () => {
+    const cache = new LocalBookingCache(memory())
+    const s: BookingState = {
+      estado: { x: 'Pagado' },
+      links: { x: 'https://a.io' },
+      modes: { 't-1': 'bus' },
+      t: 9,
+    }
     cache.save(s)
     assert.deepEqual(cache.load(), s)
+
+    const prefs = new LocalPreferencesStore(memory())
+    assert.equal(prefs.load(), null)
+    prefs.save({ mode: 'dark', accent: 'violeta' })
+    assert.deepEqual(prefs.load(), { mode: 'dark', accent: 'violeta' })
   })
 
   it('SyncedBookingStore guarda local de inmediato y remoto con retardo', async () => {
@@ -139,14 +131,10 @@ describe('almacenamiento', () => {
       push: (s: BookingState) => void pushed.push(s),
       connect: () => () => undefined,
     } as unknown as ClaudeDbSync
-    const mem = new Map<string, string>()
-    const cache = new LocalBookingCache({
-      getItem: (k) => mem.get(k) ?? null,
-      setItem: (k, v) => void mem.set(k, v),
-    })
+    const cache = new LocalBookingCache(memory())
     const store = new SyncedBookingStore(cache, remote, 5)
-    store.save({ estado: { a: 'Reservado' }, links: {}, t: 1 })
-    store.save({ estado: { a: 'Pagado' }, links: {}, t: 2 })
+    store.save({ estado: { a: 'Reservado' }, links: {}, modes: {}, t: 1 })
+    store.save({ estado: { a: 'Pagado' }, links: {}, modes: {}, t: 2 })
     assert.equal(cache.load().t, 2)
     assert.equal(pushed.length, 0)
     await new Promise((r) => setTimeout(r, 30))

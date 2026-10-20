@@ -9,6 +9,7 @@ import { describe, it } from 'node:test'
  *   application → domain
  *   infrastructure → application, domain
  *   presentation → application, domain  (la infraestructura entra solo vía composition.ts)
+ *   composition / main → todas (es la raíz que las une)
  */
 const SRC = resolve('src')
 type Layer = 'domain' | 'application' | 'infrastructure' | 'presentation' | 'composition'
@@ -17,8 +18,8 @@ const ALLOWED: Record<Layer, readonly Layer[]> = {
   domain: ['domain'],
   application: ['application', 'domain'],
   infrastructure: ['infrastructure', 'application', 'domain'],
-  presentation: ['presentation', 'application', 'domain', 'composition'],
-  composition: ['composition', 'application', 'domain', 'infrastructure'],
+  presentation: ['presentation', 'application', 'domain'],
+  composition: ['composition', 'application', 'domain', 'infrastructure', 'presentation'],
 }
 
 function files(dir: string): string[] {
@@ -30,7 +31,7 @@ function files(dir: string): string[] {
 
 function layerOf(file: string): Layer {
   const top = relative(SRC, file).split(sep)[0] ?? ''
-  if (top === 'composition.ts') return 'composition'
+  if (top === 'composition.ts' || top === 'main.ts') return 'composition'
   return top as Layer
 }
 

@@ -3,6 +3,7 @@ import { formatRange } from '../../../domain/money'
 import { budgetTotal } from '../../../domain/summary'
 import { useApp } from '../../AppContext'
 import { ExtLink } from '../../components/Links'
+import { ui } from '../../ui'
 import { DayCard } from '../calendar/CalendarView'
 
 export function MadridView() {
@@ -15,27 +16,25 @@ export function MadridView() {
   const total = budgetTotal(trip.madridBudget)
 
   return (
-    <section className="panel" id="p-mad" role="tabpanel" aria-labelledby="tab-mad">
-      <p className="lead">{guide.lead}</p>
-      <p className="warn">
+    <section className={ui.panel} id="p-mad" role="tabpanel" aria-labelledby="tab-mad">
+      <p className={ui.lead}>{guide.lead}</p>
+      <p className={ui.warn}>
         <b>Cambio de ruta.</b> {guide.routeNote}
       </p>
 
-      <h2 className="sub-h">Plan del 21 al 26 de noviembre</h2>
-      <ol className="days">
+      <h2 className={ui.subH}>Plan del 21 al 26 de noviembre</h2>
+      <ol className={ui.list}>
         {days.map((d) => (
           <DayCard key={d.day} day={d} />
         ))}
       </ol>
 
-      <h2 className="sub-h">Tour Bernabéu: el miércoles 25</h2>
-      <div className="row" style={{ gridTemplateColumns: 'minmax(0,1fr)' }}>
+      <h2 className={ui.subH}>Tour Bernabéu: el miércoles 25</h2>
+      <div className={ui.row + ' grid-cols-1!'}>
         <div>
-          <p className="note" style={{ marginTop: 0 }}>
-            {guide.bernabeuIntro}
-          </p>
-          <div className="tbl">
-            <table>
+          <p className={`${ui.note} mt-0`}>{guide.bernabeuIntro}</p>
+          <div className="overflow-x-auto">
+            <table className={ui.table}>
               <thead>
                 <tr>
                   <th>Entrada (en línea)</th>
@@ -52,35 +51,35 @@ export function MadridView() {
               </tbody>
             </table>
           </div>
-          <ul className="tips" style={{ marginTop: 10 }}>
+          <ul className={`${ui.tips} mt-2.5`}>
             {guide.bernabeuTips.map((tip) => (
               <li key={tip.title}>
                 <b>{tip.title}</b> {tip.text}
               </li>
             ))}
           </ul>
-          <div className="links">
+          <div className={ui.links}>
             <ExtLink href={guide.bernabeuBuyUrl}>Comprar en realmadrid.com</ExtLink>
           </div>
         </div>
       </div>
 
-      <h2 className="sub-h">Dónde dormir: apartamento privado</h2>
-      <p className="lead">{guide.zonesLead}</p>
-      <ul className="rows">
+      <h2 className={ui.subH}>Dónde dormir: apartamento privado</h2>
+      <p className={ui.lead}>{guide.zonesLead}</p>
+      <ul className={ui.list}>
         {guide.zones.map((z) => (
-          <li key={z.id} className="row" style={{ gridTemplateColumns: 'minmax(0,1fr)' }}>
+          <li key={z.id} className={`${ui.row} grid-cols-1!`}>
             <div>
-              <h3>{z.name}</h3>
-              <div className="meta">{z.places}</div>
-              <p className="note">{z.description}</p>
+              <h3 className={ui.rowTitle}>{z.name}</h3>
+              <div className={ui.meta}>{z.places}</div>
+              <p className={ui.note}>{z.description}</p>
               {z.priceNote && (
-                <p className="note">
+                <p className={ui.note}>
                   <b>Precio.</b> {z.priceNote}
                 </p>
               )}
               {apartment && (
-                <div className="links">
+                <div className={ui.links}>
                   <ExtLink href={bookingSearchUrl(apartment, z.bookingTerm)}>
                     Booking {z.airbnbTerm}
                   </ExtLink>
@@ -93,19 +92,17 @@ export function MadridView() {
           </li>
         ))}
       </ul>
-      <p className="note">{guide.zonesAvoid}</p>
-      <h3 className="sub-h" style={{ fontSize: '1rem' }}>
-        Antes de reservar
-      </h3>
-      <ul className="tips">
+      <p className={ui.note}>{guide.zonesAvoid}</p>
+      <h3 className={`${ui.subH} text-base!`}>Antes de reservar</h3>
+      <ul className={ui.tips}>
         {guide.beforeBooking.map((t) => (
           <li key={t}>{t}</li>
         ))}
       </ul>
 
-      <h2 className="sub-h">Cuánto cuesta, para dos</h2>
-      <div className="tbl">
-        <table>
+      <h2 className={ui.subH}>Cuánto cuesta, para dos</h2>
+      <div className="overflow-x-auto">
+        <table className={ui.table}>
           <thead>
             <tr>
               <th>Concepto</th>
@@ -119,15 +116,15 @@ export function MadridView() {
                 <td>{formatRange(l.price)}</td>
               </tr>
             ))}
-            <tr className="tot">
+            <tr className="font-bold [&>td]:border-b-0">
               <td>Total sin comida ni vuelos</td>
               <td>{formatRange(total)}</td>
             </tr>
           </tbody>
         </table>
       </div>
-      <p className="note">{guide.budgetNote}</p>
-      <p className="note">
+      <p className={ui.note}>{guide.budgetNote}</p>
+      <p className={ui.note}>
         Fuentes:{' '}
         {guide.sources.map((s, i) => (
           <span key={s.url}>

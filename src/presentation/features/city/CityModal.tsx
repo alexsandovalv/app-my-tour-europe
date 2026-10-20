@@ -2,10 +2,14 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import type { City } from '../../../domain/trip'
 import { Icon } from '../../components/Icon'
 import { ExtLink } from '../../components/Links'
-import { COUNTRY_COLOR, cssVars } from '../../theme'
+import { CITY_COLOR, cssVars } from '../../theme'
 
 const prefersReducedMotion = (): boolean =>
-  typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
+  typeof window !== 'undefined' &&
+  Boolean(window.matchMedia?.('(prefers-reduced-motion: reduce)').matches)
+
+const navArrow =
+  'size-[38px] cursor-pointer rounded-full border border-line bg-bg text-[1.3rem] leading-none text-ink'
 
 /** Ventana con el carrusel de lugares de una ciudad. */
 export function CityModal({ city, onClose }: { city: City; onClose(): void }) {
@@ -77,88 +81,109 @@ export function CityModal({ city, onClose }: { city: City; onClose(): void }) {
   }, [current, go, onClose])
 
   return (
-    <div className="modal" id="modal">
-      <div className="mback" onClick={onClose} />
+    <div
+      id="modal"
+      className="fixed inset-0 z-20 flex items-center justify-center px-4 py-[max(16px,env(safe-area-inset-top,0px))]"
+    >
+      <div className="absolute inset-0 bg-[var(--scrim)]" onClick={onClose} />
       <div
-        className="mpanel"
+        ref={panelRef}
         role="dialog"
         aria-modal="true"
         aria-labelledby="mTitle"
-        ref={panelRef}
+        className="relative flex max-h-full w-[min(680px,100%)] flex-col overflow-hidden rounded-[10px] border border-line bg-surface"
       >
-        <div className="mhead">
+        <div className="flex items-start justify-between gap-3 border-b border-line px-4 pt-3.5 pb-3">
           <div>
-            <h2 id="mTitle">{city.name}</h2>
-            <div className="meta" id="mSub">
+            <h2 id="mTitle" className="text-2xl font-extrabold tracking-tight">
+              {city.name}
+            </h2>
+            <div id="mSub" className="mt-0.5 font-mono text-[.72rem] text-muted">
               {city.subtitle}
             </div>
           </div>
           <button
+            ref={closeRef}
             type="button"
-            className="mclose"
             id="mClose"
             aria-label="Cerrar"
-            ref={closeRef}
+            className="size-9 flex-none cursor-pointer rounded-full border border-line bg-bg text-[1.3rem] leading-none text-ink"
             onClick={onClose}
           >
             &times;
           </button>
         </div>
         <div
-          className="track"
+          ref={trackRef}
           id="track"
           tabIndex={0}
           aria-label="Lugares de la ciudad"
-          ref={trackRef}
+          className="scrollbar-none flex min-h-0 snap-x snap-mandatory overflow-x-auto overscroll-x-contain"
           onScroll={syncCurrent}
         >
           {city.places.map((place, i) => (
-            <article key={place.title} className="slide" aria-label={`${i + 1} de ${total}`}>
-              <div className="pic" style={cssVars({ '--cc': COUNTRY_COLOR[city.country] })}>
-                <Icon name={place.icon} />
-                <span className="pcount">
+            <article
+              key={place.title}
+              data-testid="slide"
+              aria-label={`${i + 1} de ${total}`}
+              className="min-w-0 flex-[0_0_100%] snap-start overflow-y-auto"
+            >
+              <div
+                className="relative grid aspect-[16/8] max-h-[34vh] w-full place-items-center bg-[linear-gradient(135deg,color-mix(in_srgb,var(--cc)_38%,var(--surface)),color-mix(in_srgb,var(--cc)_10%,var(--surface)))]"
+                style={cssVars({ '--cc': CITY_COLOR[city.id] })}
+              >
+                <div className="w-[min(34%,140px)] fill-none stroke-ink stroke-[2.2] opacity-85 [stroke-linecap:round] [stroke-linejoin:round]">
+                  <Icon name={place.icon} />
+                </div>
+                <span className="absolute right-3 bottom-2.5 font-mono text-[.72rem] text-muted">
                   {i + 1} / {total}
                 </span>
               </div>
-              <div className="cap">
-                <h3>{place.title}</h3>
-                <p>{place.description}</p>
-                <ExtLink
-                  href={`https://www.google.com/search?tbm=isch&q=${encodeURIComponent(`${place.title} ${city.name}`)}`}
-                >
-                  Ver fotos de este lugar
-                </ExtLink>
+              <div className="flex flex-col gap-1.5 px-4 pt-3.5 pb-3">
+                <h3 className="text-xl font-extrabold">{place.title}</h3>
+                <p className="m-0 max-w-[60ch]">{place.description}</p>
+                <span className="text-[.88rem] font-medium">
+                  <ExtLink
+                    href={`https://www.google.com/search?tbm=isch&q=${encodeURIComponent(`${place.title} ${city.name}`)}`}
+                  >
+                    Ver fotos de este lugar
+                  </ExtLink>
+                </span>
               </div>
             </article>
           ))}
         </div>
         {total > 1 && (
-          <div className="mnav" id="mnav">
+          <div
+            id="mnav"
+            className="flex items-center justify-between gap-2.5 border-t border-line px-4 pt-2.5 pb-3.5"
+          >
             <button
               type="button"
-              className="arrow"
               id="mPrev"
               aria-label="Anterior"
+              className={navArrow}
               onClick={() => go(current - 1)}
             >
               &#8249;
             </button>
-            <div className="dots" id="dots">
+            <div id="dots" className="flex flex-wrap justify-center gap-1.5">
               {city.places.map((place, i) => (
                 <button
                   key={place.title}
                   type="button"
                   aria-label={`Ir al lugar ${i + 1}`}
                   aria-current={i === current ? 'true' : 'false'}
+                  className="size-[9px] cursor-pointer rounded-full border-0 bg-line p-0 aria-[current=true]:scale-125 aria-[current=true]:bg-accent"
                   onClick={() => go(i)}
                 />
               ))}
             </div>
             <button
               type="button"
-              className="arrow"
               id="mNext"
               aria-label="Siguiente"
+              className={navArrow}
               onClick={() => go(current + 1)}
             >
               &#8250;
